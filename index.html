@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSPD - Advanced MDC & Reporting System v2.5</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK (v9 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #06090e;
+            --card-bg: rgba(15, 22, 35, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #0066ff;
+            --accent-gold: #d4af37;
+            --success-green: #10b981;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+        /* Auth Screen */
+        .auth-wrapper {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: radial-gradient(circle at center, #0f172a 0%, #06090e 100%);
+        }
+        .auth-container {
+            width: 100%; max-width: 440px; background: var(--card-bg);
+            backdrop-filter: blur(16px); border: 1px solid var(--card-border);
+            padding: 40px; border-radius: 16px; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        .badge-logo-auth {
+            width: 110px; height: 110px; margin-bottom: 20px; object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(0, 102, 255, 0.6));
+        }
+
+        .form-group { margin-bottom: 18px; text-align: left; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-control {
+            width: 100%; padding: 12px 14px; background: rgba(10, 15, 26, 0.8); border: 1px solid var(--card-border);
+            border-radius: 8px; color: #fff; outline: none; transition: 0.2s; font-size: 14px;
+        }
+        .form-control:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2); }
+
+        .btn { width: 100%; padding: 12px; background: var(--accent-blue); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-success { background: var(--success-green); }
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-secondary { background: #334155; color: #fff; }
+        .btn-sm { width: auto; padding: 6px 14px; font-size: 12px; }
+
+        .toggle-auth { color: var(--accent-blue); font-size: 13px; cursor: pointer; margin-top: 20px; display: block; }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .custom-card-modal {
+            background: #0d131f; border: 1px solid var(--card-border); padding: 30px;
+            border-radius: 16px; text-align: center; max-width: 420px; width: 90%;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-icon {
+            width: 60px; height: 60px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 28px;
+        }
+        .modal-icon.verify { background: rgba(16, 185, 129, 0.1); border: 2px solid var(--success-green); color: var(--success-green); }
+        .modal-icon.confirm { background: rgba(239, 68, 68, 0.1); border: 2px solid var(--danger); color: var(--danger); }
+
+        .modal-actions { display: flex; gap: 12px; margin-top: 24px; justify-content: center; }
+
+        /* Dashboard Layout */
+        .dashboard { display: none; min-height: 100vh; grid-template-columns: 290px 1fr; }
+        .sidebar { background: #090d16; border-right: 1px solid var(--card-border); padding: 25px 20px; display: flex; flex-direction: column; }
+        
+        .brand {
+            display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0,102,255,0.1) 0%, rgba(212,175,55,0.05) 100%);
+            border: 1px solid rgba(0, 102, 255, 0.3); margin-bottom: 30px;
+            box-shadow: 0 0 15px rgba(0, 102, 255, 0.15);
+        }
+        .brand-logo-wrapper { position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+        .brand-logo-wrapper::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; background: var(--accent-blue); filter: blur(10px); opacity: 0.5; z-index: 1; }
+        .brand img { width: 44px; height: 44px; object-fit: contain; position: relative; z-index: 2; }
+        .brand-text { display: flex; flex-direction: column; }
+        .brand-text .title { font-weight: 800; color: #fff; font-size: 15px; letter-spacing: 1px; }
+        .brand-text .subtitle { font-size: 10px; color: var(--accent-gold); font-weight: 600; letter-spacing: 0.5px; }
+
+        .nav-section-title { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 8px 10px; }
+        .nav-menu { list-style: none; margin-bottom: 10px; }
+        .nav-item {
+            padding: 11px 14px; color: var(--text-muted); cursor: pointer; border-radius: 8px;
+            margin-bottom: 4px; display: flex; align-items: center; gap: 12px; transition: 0.2s; font-size: 13.5px;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(0, 102, 255, 0.15); color: #fff; font-weight: 500; }
+        .nav-item.active { border-left: 3px solid var(--accent-blue); }
+
+        .profile-box { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--card-border); display: flex; align-items: center; gap: 12px; }
+        .profile-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-gold); }
+
+        .main-content { padding: 40px; overflow-y: auto; background: #06090e; }
+        .header-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(12px); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px; }
+        th { color: var(--text-muted); background: rgba(15, 23, 42, 0.6); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+
+        .officers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        .officer-card {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; text-align: center;
+            position: relative; transition: 0.3s; animation: fadeIn 0.4s ease;
+        }
+        .officer-card:hover { transform: translateY(-5px); border-color: var(--accent-gold); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .officer-avatar { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; border: 2px solid var(--accent-blue); }
+        .officer-badge-no { position: absolute; top: 15px; right: 15px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--card-border); color: var(--accent-gold); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+        .officer-name { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+        .officer-rank-tag { display: inline-block; font-size: 11px; color: var(--accent-gold); background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.25); padding: 4px 12px; border-radius: 20px; font-weight: 500; }
+
+        .report-actions { display: flex; gap: 8px; margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--card-border); justify-content: flex-end; }
+
+        @keyframes popIn { from { opacity:0; transform: scale(0.85); } to { opacity:1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- BILDIRIM MODAL'I -->
+    <div class="modal-overlay" id="verifyModal">
+        <div class="custom-card-modal">
+            <div class="modal-icon verify"><i class="fa-solid fa-check"></i></div>
+            <h3 style="color:#fff; margin-bottom: 8px;" id="verifyTitle">İşlem Başarılı</h3>
+            <p style="color:var(--text-muted); font-size: 13px;" id="verifyDesc">Sistem verileri güncellendi.</p>
+        </div>
+    </div>
+
+    <!-- ONAY / SİLME İŞLEMİ MODAL'I -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="custom-card-modal">
+            <div class="modal-icon confirm"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 style="color:#fff; margin-bottom: 8px;" id="confirmTitle">Silme Onayı</h3>
+            <p style="color:var(--text-muted); font-size: 13px;" id="confirmDesc">Bu raporu kalıcı olarak silmek istediğinize emin misiniz?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary btn-sm" onclick="closeConfirmModal()">İptal</button>
+                <button class="btn btn-danger btn-sm" id="confirmActionBtn">Tamam, Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GİRİŞ & KAYIT EKRANI -->
+    <div class="auth-wrapper" id="authWrapper">
+        <div class="auth-container">
+            <img src="lspd.png" alt="LSPD Logo" class="badge-logo-auth" onerror="this.src='https://i.imgur.com/6VBx3io.png'">
+            <h2 id="authTitle" style="margin-bottom:20px; font-size: 20px; letter-spacing:0.5px;">LSPD DATABASE v2.5</h2>
+            
+            <div class="form-group">
+                <label>Oyun İçi İsim (IC İsim)</label>
+                <input type="text" id="authICName" class="form-control" placeholder="Örn: Harold Schuffen">
+            </div>
+            <div class="form-group">
+                <label>Şifre</label>
+                <input type="password" id="authPassword" class="form-control" placeholder="••••••••">
+            </div>
+            
+            <button class="btn" id="authBtn" onclick="handleAuth()"><i class="fa-solid fa-right-to-bracket"></i> Giriş Yap</button>
+            <span class="toggle-auth" id="toggleAuthBtn" onclick="toggleAuthMode()">Hesabın yok mu? Kayıt Başvurusu Yap</span>
+        </div>
+    </div>
+
+    <!-- ANA PANEL -->
+    <div class="dashboard" id="dashboard">
+        <div class="sidebar">
+            <div class="brand">
+                <div class="brand-logo-wrapper">
+                    <img src="lspd.png" alt="LSPD Logo" onerror="this.src='https://i.imgur.com/6VBx3io.png'">
+                </div>
+                <div class="brand-text">
+                    <span class="title">LSPD MDC</span>
+                    <span class="subtitle">DATABASE v2.5</span>
+                </div>
+            </div>
+
+            <div class="nav-section-title">Görünüm & Kadro</div>
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="switchTab('reports', event)"><i class="fa-solid fa-folder-open"></i> Tüm Raporlar</li>
+                <li class="nav-item" onclick="switchTab('officers', event)"><i class="fa-solid fa-users"></i> Memurlar (Kadro)</li>
+            </ul>
+
+            <div class="nav-section-title">Raporlama</div>
+            <ul class="nav-menu">
+                <li class="nav-item" onclick="switchTab('newReport', event)"><i class="fa-solid fa-plus-circle"></i> Yeni Rapor Gir</li>
+            </ul>
+
+            <div class="nav-section-title" id="adminTitle" style="display:none;">Yönetim</div>
+            <ul class="nav-menu" id="adminMenu" style="display:none;">
+                <li class="nav-item" style="color: var(--accent-gold);" onclick="switchTab('approvals', event)">
+                    <i class="fa-solid fa-user-shield"></i> Üyelik & Personel Yönetimi
+                </li>
+            </ul>
+
+            <div class="profile-box">
+                <img src="" id="userAvatar" class="profile-img" alt="Profil">
+                <div style="overflow:hidden;">
+                    <div id="userName" style="font-weight:600; font-size:13px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">-</div>
+                    <div id="userRank" style="color:var(--accent-gold); font-size:11px;">-</div>
+                    <a href="#" onclick="logout()" style="color:var(--danger); font-size:11px; text-decoration:none; margin-top:3px; display:inline-block;">Çıkış Yap</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- RAPORLAR SEKMESİ -->
+            <div id="tab-reports">
+                <div class="header-title">
+                    <h2>Sistemdeki Olay Raporları</h2>
+                    <div style="width: 250px;">
+                        <select id="reportCategoryFilter" class="form-control" onchange="filterReports()">
+                            <option value="ALL">Tüm Kategoriler</option>
+                            <option value="Gözaltı Raporu">Gözaltı Raporları</option>
+                            <option value="El Koyulan Materyaller">El Koyulan Materyaller</option>
+                            <option value="APB Kaydı">APB Kayıtları</option>
+                            <option value="Tutuklama Kaydı">Tutuklananlar</option>
+                            <option value="Sorgu Kaydı">Sorgu Kayıtları</option>
+                            <option value="İfade Kaydı">İfade Kayıtları</option>
+                            <option value="Araç Çekim Raporu">Araç Çekim Raporları</option>
+                            <option value="Vaka Raporu">Vaka Raporları</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="reportsList"></div>
+            </div>
+
+            <!-- MEMURLAR SEKMESİ -->
+            <div id="tab-officers" style="display: none;">
+                <div class="header-title">
+                    <h2>Aktif LSPD Personel Kadrosu</h2>
+                </div>
+                <div class="officers-grid" id="officersGrid"></div>
+            </div>
+
+            <!-- YENİ / DÜZENLE RAPOR SEKMESİ -->
+            <div id="tab-newReport" style="display: none;">
+                <div class="header-title">
+                    <h2 id="reportFormHeader">Yeni Rapor Kaydı</h2>
+                </div>
+                <div class="card">
+                    <input type="hidden" id="editReportId" value="">
+                    <div class="form-group">
+                        <label>Rapor Türü / Kategorisi</label>
+                        <select id="repCategory" class="form-control">
+                            <option value="Gözaltı Raporu">Gözaltı Raporu</option>
+                            <option value="El Koyulan Materyaller">El Koyulan Materyaller Raporu</option>
+                            <option value="APB Kaydı">APB Kaydı</option>
+                            <option value="Tutuklama Kaydı">Tutuklananlar Kaydı</option>
+                            <option value="Sorgu Kaydı">Sorgu Kaydı</option>
+                            <option value="İfade Kaydı">İfade Kaydı</option>
+                            <option value="Araç Çekim Raporu">Araç Çekim Raporu</option>
+                            <option value="Vaka Raporu">Vaka Raporu</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Başlık / Konu</label>
+                        <input type="text" id="repTitle" class="form-control" placeholder="Örn: Idlewood Soygunu Şüphelisi">
+                    </div>
+                    <div class="form-group">
+                        <label>İlgili Kişiler / Şüpheliler</label>
+                        <input type="text" id="repSuspects" class="form-control" placeholder="Örn: John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Rapor Detayları ve Açıklama</label>
+                        <textarea id="repDetails" class="form-control" rows="6" placeholder="Detaylı olay özeti..."></textarea>
+                    </div>
+                    <button class="btn btn-success" id="saveReportBtn" onclick="submitReport()"><i class="fa-solid fa-floppy-disk"></i> Raporu Onayla & Sisteme İşle</button>
+                </div>
+            </div>
+
+            <!-- YÖNETİCİ ARAYÜZÜ: ONAYLAR VE AKTİF PERSONEL DÜZENLEME -->
+            <div id="tab-approvals" style="display: none;">
+                <div class="header-title">
+                    <h2>Bekleyen Kayıt Başvuruları</h2>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Kayıtlı IC İsim</th>
+                                <th>Onaylanacak İsim</th>
+                                <th>Rozet No</th>
+                                <th>Atanacak Rütbe</th>
+                                <th>Profil Fotoğrafı</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingUsersTable"></tbody>
+                    </table>
+                </div>
+
+                <div class="header-title" style="margin-top: 40px;">
+                    <h2>Aktif Memur Profillerini Güncelle / Düzenle</h2>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Memur Görseli</th>
+                                <th>Ad Soyad (IC İsim)</th>
+                                <th>Rozet No</th>
+                                <th>Rütbe</th>
+                                <th>Profil Fotoğrafı (URL/Görsel)</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activeUsersEditTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdp_kKYK0wGDUGUgkO96-vGZs5F2Ot250",
+            authDomain: "mercia-pd.firebaseapp.com",
+            databaseURL: "https://mercia-pd-default-rtdb.firebaseio.com",
+            projectId: "mercia-pd",
+            storageBucket: "mercia-pd.firebasestorage.app",
+            messagingSenderId: "340875265258",
+            appId: "1:340875265258:web:8ebbff9c4275888ee9c393",
+            measurementId: "G-WLT3SZ2GFY"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let isSignUp = false;
+        let currentUserData = null;
+        let currentUserId = null;
+        let allReports = [];
+
+        const ranksList = [
+            "Police Lieutenant II",
+            "Police Lieutenant I",
+            "Police Sergeant II",
+            "Police Sergeant I",
+            "Detective II",
+            "Detective I",
+            "Police Officer III+1",
+            "Police Officer II",
+            "Police Officer I"
+        ];
+
+        const authorizedRanks = [
+            "Police Lieutenant II",
+            "Police Lieutenant I",
+            "Police Sergeant II"
+        ];
+
+        // IC İsimleri Firebase e-posta formatına dönüştüren yardımcı fonksiyon
+        function convertNameToEmail(icName) {
+            const cleanName = icName.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+            return `${cleanName}@lspd.local`;
+        }
+
+        function isManagement() {
+            if(!currentUserData) return false;
+            return currentUserData.isAdmin || authorizedRanks.includes(currentUserData.rank);
+        }
+
+        function showVerifyModal(title, desc, callback) {
+            document.getElementById('verifyTitle').innerText = title;
+            document.getElementById('verifyDesc').innerText = desc;
+            const modal = document.getElementById('verifyModal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                if(callback) callback();
+            }, 1600);
+        }
+
+        function openConfirmModal(title, desc, actionCallback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmDesc').innerText = desc;
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'flex';
+
+            const actionBtn = document.getElementById('confirmActionBtn');
+            actionBtn.onclick = () => {
+                modal.style.display = 'none';
+                if(actionCallback) actionCallback();
+            };
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('authTitle').innerText = isSignUp ? "MEMUR KAYIT BAŞVURUSU" : "LSPD DATABASE v2.5";
+            document.getElementById('authBtn').innerHTML = isSignUp ? '<i class="fa-solid fa-paper-plane"></i> Başvuru Yap' : '<i class="fa-solid fa-right-to-bracket"></i> Giriş Yap';
+            document.getElementById('toggleAuthBtn').innerText = isSignUp ? "Zaten hesabın var mı? Giriş Yap" : "Hesabın yok mu? Kayıt Başvurusu Yap";
+        }
+
+        function handleAuth() {
+            const icName = document.getElementById('authICName').value.trim();
+            const pass = document.getElementById('authPassword').value;
+
+            if(!icName || !pass) return alert("Lütfen Oyun İçi İsim (IC İsim) ve Şifrenizi doldurun.");
+
+            const email = convertNameToEmail(icName);
+
+            if(isSignUp) {
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then((userCredential) => {
+                        db.collection("users").doc(userCredential.user.uid).set({
+                            icName: icName,
+                            name: icName,
+                            status: "pending",
+                            rank: "Police Officer I",
+                            badge: "000",
+                            avatar: "lspd.png"
+                        }).then(() => {
+                            showVerifyModal("Başvuru Alındı", `${icName} adıyla başvuru yönetime iletildi.`);
+                            auth.signOut();
+                        });
+                    }).catch(err => alert("Başvuru Hatası: " + err.message));
+            } else {
+                auth.signInWithEmailAndPassword(email, pass)
+                    .then(() => {
+                        showVerifyModal("Giriş Başarılı", "Sisteme güvenli şekilde bağlandınız.");
+                    })
+                    .catch(err => alert("Giriş Hatalı! IC İsminizi veya şifrenizi kontrol edin."));
+            }
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if(user) {
+                currentUserId = user.uid;
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if(doc.exists) {
+                        currentUserData = doc.data();
+                        
+                        if(currentUserData.status === "pending") {
+                            alert("Hesabınız henüz LSPD yönetimi tarafından onaylanmadı!");
+                            auth.signOut();
+                            return;
+                        }
+
+                        document.getElementById('authWrapper').style.display = 'none';
+                        document.getElementById('dashboard').style.display = 'grid';
+
+                        document.getElementById('userName').innerText = currentUserData.name + " (#" + currentUserData.badge + ")";
+                        document.getElementById('userRank').innerText = currentUserData.rank;
+                        document.getElementById('userAvatar').src = currentUserData.avatar || "lspd.png";
+
+                        if(isManagement()) {
+                            document.getElementById('adminTitle').style.display = 'block';
+                            document.getElementById('adminMenu').style.display = 'block';
+                            loadPendingUsers();
+                            loadActiveUsersForEdit();
+                        } else {
+                            document.getElementById('adminTitle').style.display = 'none';
+                            document.getElementById('adminMenu').style.display = 'none';
+                        }
+
+                        loadReports();
+                        loadOfficers();
+                    }
+                });
+            } else {
+                document.getElementById('authWrapper').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
+            }
+        });
+
+        function logout() { auth.signOut(); }
+
+        function loadReports() {
+            db.collection("reports").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+                allReports = [];
+                snapshot.forEach(doc => {
+                    allReports.push({ id: doc.id, ...doc.data() });
+                });
+                renderReports(allReports);
+            });
+        }
+
+        function renderReports(reports) {
+            const container = document.getElementById('reportsList');
+            container.innerHTML = "";
+            
+            if(reports.length === 0) {
+                container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">Kayıtlı rapor bulunamadı.</div>`;
+                return;
+            }
+
+            const canDelete = isManagement();
+
+            reports.forEach(data => {
+                const canEdit = (data.authorId === currentUserId) || canDelete;
+
+                let actionButtons = "";
+                if(canEdit || canDelete) {
+                    actionButtons = `<div class="report-actions">`;
+                    if(canEdit) {
+                        actionButtons += `<button class="btn btn-warning btn-sm" onclick="editReport('${data.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>`;
+                    }
+                    if(canDelete) {
+                        actionButtons += `<button class="btn btn-danger btn-sm" onclick="deleteReport('${data.id}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
+                    }
+                    actionButtons += `</div>`;
+                }
+
+                container.innerHTML += `
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h3 style="color:var(--accent-gold);">${data.title}</h3>
+                            <span class="officer-rank-tag">${data.category || 'Vaka Raporu'}</span>
+                        </div>
+                        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                            <strong>İlgili Kişiler:</strong> ${data.suspects || 'Yok'} | <strong>Raporlayan:</strong> ${data.officer}
+                        </p>
+                        <p style="line-height:1.5; color:#cbd5e1; font-size:14px;">${data.details}</p>
+                        ${actionButtons}
+                    </div>
+                `;
+            });
+        }
+
+        function filterReports() {
+            const cat = document.getElementById('reportCategoryFilter').value;
+            if(cat === "ALL") {
+                renderReports(allReports);
+            } else {
+                const filtered = allReports.filter(r => r.category === cat);
+                renderReports(filtered);
+            }
+        }
+
+        function submitReport() {
+            const editId = document.getElementById('editReportId').value;
+            const category = document.getElementById('repCategory').value;
+            const title = document.getElementById('repTitle').value;
+            const suspects = document.getElementById('repSuspects').value;
+            const details = document.getElementById('repDetails').value;
+
+            if(!title || !details) return alert("Lütfen başlık ve açıklama alanlarını doldurun.");
+
+            if(editId) {
+                db.collection("reports").doc(editId).update({
+                    category: category,
+                    title: title,
+                    suspects: suspects,
+                    details: details
+                }).then(() => {
+                    showVerifyModal("Rapor Güncellendi", "Değişiklikler sisteme kaydedildi.", () => {
+                        resetReportForm();
+                        switchTab('reports');
+                    });
+                });
+            } else {
+                db.collection("reports").add({
+                    category: category,
+                    title: title,
+                    suspects: suspects,
+                    details: details,
+                    authorId: currentUserId,
+                    officer: currentUserData.name + " (" + currentUserData.rank + ")",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    showVerifyModal("Rapor Onaylandı", "Veri başarıyla veritabanına işlendi.", () => {
+                        resetReportForm();
+                        switchTab('reports');
+                    });
+                });
+            }
+        }
+
+        function editReport(id) {
+            const report = allReports.find(r => r.id === id);
+            if(!report) return;
+
+            document.getElementById('editReportId').value = report.id;
+            document.getElementById('repCategory').value = report.category || "Vaka Raporu";
+            document.getElementById('repTitle').value = report.title;
+            document.getElementById('repSuspects').value = report.suspects || "";
+            document.getElementById('repDetails').value = report.details;
+
+            document.getElementById('reportFormHeader').innerText = "Raporu Düzenle";
+            document.getElementById('saveReportBtn').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Değişiklikleri Kaydet';
+
+            switchTab('newReport');
+        }
+
+        function deleteReport(id) {
+            openConfirmModal("Rapor Silinsin mi?", "Bu rapor veritabanından kalıcı olarak silinecektir.", () => {
+                db.collection("reports").doc(id).delete().then(() => {
+                    showVerifyModal("Rapor Silindi", "Kayıt silme işlemi tamamlandı.");
+                });
+            });
+        }
+
+        function resetReportForm() {
+            document.getElementById('editReportId').value = "";
+            document.getElementById('repTitle').value = "";
+            document.getElementById('repSuspects').value = "";
+            document.getElementById('repDetails').value = "";
+            document.getElementById('reportFormHeader').innerText = "Yeni Rapor Kaydı";
+            document.getElementById('saveReportBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Raporu Onayla & Sisteme İşle';
+        }
+
+        function loadOfficers() {
+            db.collection("users").where("status", "==", "approved").onSnapshot(snapshot => {
+                const grid = document.getElementById('officersGrid');
+                grid.innerHTML = "";
+
+                snapshot.forEach(doc => {
+                    const u = doc.data();
+                    grid.innerHTML += `
+                        <div class="officer-card">
+                            <span class="officer-badge-no">#${u.badge || '000'}</span>
+                            <img src="${u.avatar || 'lspd.png'}" class="officer-avatar" alt="${u.name}" onerror="this.src='lspd.png'">
+                            <div class="officer-name">${u.name || 'Bilinmeyen Memur'}</div>
+                            <div class="officer-rank-tag">${u.rank || 'Police Officer I'}</div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function loadPendingUsers() {
+            db.collection("users").where("status", "==", "pending").onSnapshot(snapshot => {
+                const tbody = document.getElementById('pendingUsersTable');
+                tbody.innerHTML = "";
+
+                if(snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Bekleyen başvuru yok.</td></tr>`;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const u = doc.data();
+                    const uid = doc.id;
+
+                    let rankOptions = ranksList.map(r => `<option value="${r}">${r}</option>`).join('');
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong style="color:var(--accent-gold);">${u.icName || 'İsimsiz'}</strong></td>
+                            <td><input type="text" id="name_${uid}" class="form-control" value="${u.icName || ''}" style="padding:6px;"></td>
+                            <td><input type="text" id="badge_${uid}" class="form-control" placeholder="Rozet" style="width:70px; padding:6px;"></td>
+                            <td>
+                                <select id="rank_${uid}" class="form-control" style="padding:6px;">
+                                    ${rankOptions}
+                                </select>
+                            </td>
+                            <td><input type="text" id="avatar_${uid}" class="form-control" placeholder="Görsel URL veya lspd.png" value="lspd.png" style="padding:6px;"></td>
+                            <td>
+                                <button class="btn btn-success" style="padding:6px 12px; font-size:12px;" onclick="approveUser('${uid}')">Onayla</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function loadActiveUsersForEdit() {
+            db.collection("users").where("status", "==", "approved").onSnapshot(snapshot => {
+                const tbody = document.getElementById('activeUsersEditTable');
+                tbody.innerHTML = "";
+
+                snapshot.forEach(doc => {
+                    const u = doc.data();
+                    const uid = doc.id;
+
+                    let rankOptions = ranksList.map(r => `<option value="${r}" ${r === u.rank ? 'selected' : ''}>${r}</option>`).join('');
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <img src="${u.avatar || 'lspd.png'}" style="width:34px; height:34px; border-radius:50%; object-fit:cover;" onerror="this.src='lspd.png'">
+                            </td>
+                            <td><input type="text" id="edit_name_${uid}" class="form-control" value="${u.name || ''}" style="padding:6px;"></td>
+                            <td><input type="text" id="edit_badge_${uid}" class="form-control" value="${u.badge || ''}" style="width:70px; padding:6px;"></td>
+                            <td>
+                                <select id="edit_rank_${uid}" class="form-control" style="padding:6px;">
+                                    ${rankOptions}
+                                </select>
+                            </td>
+                            <td><input type="text" id="edit_avatar_${uid}" class="form-control" value="${u.avatar || 'lspd.png'}" style="padding:6px;"></td>
+                            <td>
+                                <button class="btn btn-warning" style="padding:6px 12px; font-size:12px;" onclick="updateUserProfile('${uid}')">Güncelle</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function approveUser(uid) {
+            const name = document.getElementById(`name_${uid}`).value;
+            const badge = document.getElementById(`badge_${uid}`).value;
+            const rank = document.getElementById(`rank_${uid}`).value;
+            const avatar = document.getElementById(`avatar_${uid}`).value;
+
+            if(!name || !badge) return alert("Lütfen ad ve rozet alanlarını doldurun.");
+
+            db.collection("users").doc(uid).update({
+                status: "approved",
+                name: name,
+                badge: badge,
+                rank: rank,
+                avatar: avatar || "lspd.png",
+                isAdmin: rank.includes("Lieutenant") ? true : false
+            }).then(() => {
+                showVerifyModal("Memur Onaylandı", "Personel kaydı başarıyla oluşturuldu.");
+            });
+        }
+
+        function updateUserProfile(uid) {
+            const name = document.getElementById(`edit_name_${uid}`).value;
+            const badge = document.getElementById(`edit_badge_${uid}`).value;
+            const rank = document.getElementById(`edit_rank_${uid}`).value;
+            const avatar = document.getElementById(`edit_avatar_${uid}`).value;
+
+            if(!name || !badge) return alert("Lütfen isim ve rozet numarasını boş bırakmayın.");
+
+            db.collection("users").doc(uid).update({
+                name: name,
+                badge: badge,
+                rank: rank,
+                avatar: avatar || "lspd.png",
+                isAdmin: rank.includes("Lieutenant") ? true : false
+            }).then(() => {
+                showVerifyModal("Profil Güncellendi", "Memur bilgileri başarıyla revize edildi.");
+            });
+        }
+
+        function switchTab(tab, e) {
+            if(tab !== 'newReport') resetReportForm();
+
+            document.getElementById('tab-reports').style.display = 'none';
+            document.getElementById('tab-officers').style.display = 'none';
+            document.getElementById('tab-newReport').style.display = 'none';
+            document.getElementById('tab-approvals').style.display = 'none';
+
+            document.getElementById('tab-' + tab).style.display = 'block';
+
+            const items = document.querySelectorAll('.nav-item');
+            items.forEach(i => i.classList.remove('active'));
+            if(e && e.currentTarget) {
+                e.currentTarget.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
