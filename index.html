@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LSPD — Advanced MDC System</title>
+    <title>LSPD — Mercia Roleplay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -566,6 +566,9 @@
         <div class="nav-item detective" id="detectiveNav" style="display:none;" data-tab="detective" onclick="switchTab('detective', this)">
             <i class="fa-solid fa-user-secret"></i> Dedektif Büro
         </div>
+        <div class="nav-item" id="gangNav" style="display:none;color:#f97316;" data-tab="gang" onclick="switchTab('gang', this)">
+            <i class="fa-solid fa-people-robbery"></i> Gang Bureau
+        </div>
         <div class="nav-label">İşlemler</div>
         <div class="nav-item" data-tab="newReport" onclick="switchTab('newReport', this)">
             <i class="fa-solid fa-plus-circle"></i> Yeni Rapor
@@ -803,6 +806,123 @@
             </div>
         </div>
 
+        <!-- GANG BUREAU (GED-GND) -->
+        <div id="tab-gang" style="display:none;">
+            <div class="page-header">
+                <div>
+                    <h2>Gang Bureau (GED-GND)</h2>
+                    <p class="desc">Çete mücadele birimi veritabanı</p>
+                </div>
+                <button class="btn btn-success btn-sm" onclick="openGangForm()">
+                    <i class="fa-solid fa-plus"></i> Yeni Kayıt
+                </button>
+            </div>
+            <div class="det-tabs">
+                <button class="det-tab active" style="--accent:#f97316;" onclick="switchGang('Saha Araştırma Raporu', this)">Saha Araştırma</button>
+                <button class="det-tab" onclick="switchGang('Şahıs Takip Raporu', this)">Şahıs Takip</button>
+                <button class="det-tab" onclick="switchGang('Fraksiyon Raporu', this)">Fraksiyon Raporları</button>
+            </div>
+            <div id="gangList"></div>
+            <div class="pagination" id="gangPagination"></div>
+
+            <div class="card" id="gangFormCard" style="display:none;margin-top:20px;">
+                <h3 id="gangFormTitle" style="margin-bottom:16px;">Yeni Gang Bureau Kaydı</h3>
+                <input type="hidden" id="gangEditId" value="">
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="gangCategory" class="form-control" onchange="updateGangFormFields()">
+                        <option value="Saha Araştırma Raporu">Saha Araştırma Raporu</option>
+                        <option value="Şahıs Takip Raporu">Şahıs Takip Raporu</option>
+                        <option value="Fraksiyon Raporu">Fraksiyon Raporu</option>
+                    </select>
+                </div>
+
+                <!-- Saha Araştırma fields -->
+                <div id="gangFieldsSaha">
+                    <div class="form-group">
+                        <label>Rapor Tarihi</label>
+                        <input type="datetime-local" id="gangDate" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Soruşturmacılar</label>
+                        <input type="text" id="gangInvestigators" class="form-control" placeholder="Memur isimleri">
+                    </div>
+                    <div class="form-group">
+                        <label>Rapor Konusu</label>
+                        <input type="text" id="gangSubject" class="form-control" placeholder="Konu">
+                    </div>
+                    <div class="form-group">
+                        <label>Rapor İçeriği</label>
+                        <textarea id="gangContent" class="form-control" rows="5" placeholder="Detaylı içerik..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Ek(ler) — Fotoğraf / Dosya URL</label>
+                        <div id="gangPhotoInputs">
+                            <div class="photo-row">
+                                <input type="text" class="form-control gang-photo-url" placeholder="https://...">
+                                <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('gangPhotoInputs')"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Şahıs Takip fields -->
+                <div id="gangFieldsPerson" style="display:none;">
+                    <div class="form-group"><label>Ad</label><input type="text" id="gangFirstName" class="form-control" placeholder="Ad"></div>
+                    <div class="form-group"><label>Soyad</label><input type="text" id="gangLastName" class="form-control" placeholder="Soyad"></div>
+                    <div class="form-group"><label>Uyruk</label><input type="text" id="gangNationality" class="form-control" placeholder="Uyruk"></div>
+                    <div class="form-group">
+                        <label>Cinsiyet</label>
+                        <select id="gangGender" class="form-control">
+                            <option value="Erkek">Erkek</option>
+                            <option value="Kadın">Kadın</option>
+                            <option value="Diğer">Diğer</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Telefon Numarası</label><input type="text" id="gangPhone" class="form-control" placeholder="Telefon"></div>
+                    <div class="form-group"><label>Kişinin Mülkleri</label><textarea id="gangProperties" class="form-control" rows="3" placeholder="Araç, ev, işletme vb."></textarea></div>
+                    <div class="form-group"><label>Takip İçeriği</label><textarea id="gangTrackContent" class="form-control" rows="5" placeholder="Takip detayları..."></textarea></div>
+                    <div class="form-group">
+                        <label>Ek Fotoğraflar (URL)</label>
+                        <div id="gangPhotoInputs2">
+                            <div class="photo-row">
+                                <input type="text" class="form-control gang-photo-url" placeholder="https://...">
+                                <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('gangPhotoInputs2')"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fraksiyon fields -->
+                <div id="gangFieldsFaction" style="display:none;">
+                    <div class="form-group"><label>Yapılanmanın İsmi</label><input type="text" id="gangFactionName" class="form-control" placeholder="Fraksiyon / çete adı"></div>
+                    <div class="form-group"><label>Yapılanmanın Türü</label><input type="text" id="gangFactionType" class="form-control" placeholder="Örn: Street Gang, Cartel..."></div>
+                    <div class="form-group">
+                        <label>Yapılanmanın Yerleşkesi (Resim URL)</label>
+                        <input type="text" id="gangFactionHQ" class="form-control" placeholder="https://... (görsel)">
+                    </div>
+                    <div class="form-group"><label>Yapılanmanın Konumu</label><input type="text" id="gangFactionLocation" class="form-control" placeholder="Bölge / adres"></div>
+                    <div class="form-group"><label>İşlediği / Eğilimli Olduğu Suçlar</label><textarea id="gangFactionCrimes" class="form-control" rows="3" placeholder="Suç listesi..."></textarea></div>
+                    <div class="form-group"><label>Bağlantılı / Şüpheli Şahıslar</label><textarea id="gangFactionMembers" class="form-control" rows="3" placeholder="İsimler..."></textarea></div>
+                    <div class="form-group"><label>Suç Bağlantısı &amp; Geçmiş Yapı (Detaylı)</label><textarea id="gangFactionHistory" class="form-control" rows="5" placeholder="Detaylı anlatım..."></textarea></div>
+                    <div class="form-group">
+                        <label>Ek Fotoğraflar (URL)</label>
+                        <div id="gangPhotoInputs3">
+                            <div class="photo-row">
+                                <input type="text" class="form-control gang-photo-url" placeholder="https://...">
+                                <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('gangPhotoInputs3')"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:12px;">
+                    <button class="btn btn-success" onclick="submitGangRecord()"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+                    <button class="btn btn-ghost" onclick="closeGangForm()">İptal</button>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-attendance" style="display:none;">
             <div class="page-header">
                 <div>
@@ -921,9 +1041,24 @@ function rankClass(rank) {
 function canAccessDetective() {
     return currentUserData && (detectiveRanks.includes(currentUserData.rank) || currentUserData.isAdmin || authorizedRanks.includes(currentUserData.rank));
 }
+function canAccessGang() {
+    // GED-GND: Detective, Sergeant, Lieutenant ve admin
+    return currentUserData && (
+        currentUserData.isAdmin ||
+        detectiveRanks.includes(currentUserData.rank) ||
+        authorizedRanks.includes(currentUserData.rank) ||
+        (currentUserData.rank && currentUserData.rank.includes('Sergeant'))
+    );
+}
+let allGangRecords = [];
+let filteredGang = [];
+let gangPage = 1;
+let currentGangCat = 'Saha Araştırma Raporu';
 function addPhotoInput(containerId) {
     const box = document.getElementById(containerId);
-    const cls = containerId.includes('det') ? 'det-photo-url' : 'rep-photo-url';
+    let cls = 'rep-photo-url';
+    if (containerId.includes('det')) cls = 'det-photo-url';
+    if (containerId.includes('gang')) cls = 'gang-photo-url';
     const row = document.createElement('div');
     row.className = 'photo-row';
     row.innerHTML = `<input type="text" class="form-control ${cls}" placeholder="https://...">
@@ -1163,6 +1298,10 @@ auth.onAuthStateChanged(user => {
                 document.getElementById('detectiveNav').style.display = 'flex';
                 loadDetRecords();
             }
+            if (canAccessGang()) {
+                document.getElementById('gangNav').style.display = 'flex';
+                loadGangRecords();
+            }
             loadReports();
             loadOfficers();
             renderHandbook();
@@ -1177,7 +1316,7 @@ function logout() { auth.signOut(); }
 
 function switchTab(tab, el) {
     if (tab !== 'newReport') resetReportForm();
-    ['dashboard','reports','officers','handbook','detective','newReport','attendance','admin'].forEach(t => {
+    ['dashboard','reports','officers','handbook','detective','gang','newReport','attendance','admin'].forEach(t => {
         const e = document.getElementById('tab-' + t);
         if (e) e.style.display = 'none';
     });
@@ -1797,6 +1936,262 @@ function editDetRecord(id) {
 function deleteDetRecord(id) {
     openConfirm('Kayıt Silinsin mi?', 'Bu işlem geri alınamaz.', () => {
         db.collection('detective').doc(id).delete().then(() => showToast('Silindi', 'Kayıt kaldırıldı.'));
+    });
+}
+
+/* ========== GANG BUREAU (GED-GND) ========== */
+function loadGangRecords() {
+    db.collection('gang').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        allGangRecords = [];
+        snap.forEach(d => allGangRecords.push({ id: d.id, ...d.data() }));
+        renderGangList();
+    }, err => console.warn('gang load:', err));
+}
+function switchGang(cat, btn) {
+    currentGangCat = cat;
+    gangPage = 1;
+    document.querySelectorAll('#tab-gang .det-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderGangList();
+    playClick();
+}
+function updateGangFormFields() {
+    const cat = document.getElementById('gangCategory').value;
+    document.getElementById('gangFieldsSaha').style.display = cat === 'Saha Araştırma Raporu' ? 'block' : 'none';
+    document.getElementById('gangFieldsPerson').style.display = cat === 'Şahıs Takip Raporu' ? 'block' : 'none';
+    document.getElementById('gangFieldsFaction').style.display = cat === 'Fraksiyon Raporu' ? 'block' : 'none';
+}
+function renderGangList() {
+    const box = document.getElementById('gangList');
+    if (!box) return;
+    filteredGang = allGangRecords.filter(r => r.category === currentGangCat);
+    const start = (gangPage - 1) * PAGE_SIZE;
+    const pageItems = filteredGang.slice(start, start + PAGE_SIZE);
+    if (!filteredGang.length) {
+        box.innerHTML = `<div class="card empty-state"><i class="fa-solid fa-folder-open"></i><p>Bu kategoride kayıt yok.</p></div>`;
+        const pag = document.getElementById('gangPagination');
+        if (pag) pag.innerHTML = '';
+        return;
+    }
+    box.innerHTML = pageItems.map(r => {
+        const title = r.title || r.subject || ((r.firstName || '') + ' ' + (r.lastName || '')).trim() || r.factionName || 'Kayıt';
+        const hasPhotos = r.photos && r.photos.length;
+        return `
+            <div class="card report-card" onclick="openGangDetail('${r.id}')">
+                <div class="report-top">
+                    <div class="report-title">${esc(title)}${hasPhotos ? ' <i class="fa-solid fa-image" style="color:#f97316;font-size:0.85rem;"></i>' : ''}</div>
+                    <span class="badge-tag">${esc(r.category)}</span>
+                </div>
+                <div class="report-meta">
+                    <span><strong>Memur:</strong> ${esc(r.officer || '-')}</span>
+                    <span class="report-date"><i class="fa-regular fa-clock"></i> ${formatDate(r.createdAt)}</span>
+                </div>
+                <div class="report-preview">${esc(r.preview || r.content || r.trackContent || r.factionHistory || '')}</div>
+                <div class="report-actions" onclick="event.stopPropagation()">
+                    <button class="btn btn-info btn-sm" onclick="openGangDetail('${r.id}')"><i class="fa-solid fa-eye"></i> İncele</button>
+                    <button class="btn btn-warning btn-sm" onclick="editGangRecord('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteGangRecord('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>
+                </div>
+            </div>`;
+    }).join('');
+    const pages = Math.ceil(filteredGang.length / PAGE_SIZE) || 1;
+    const pag = document.getElementById('gangPagination');
+    if (!pag) return;
+    if (filteredGang.length <= PAGE_SIZE) {
+        pag.innerHTML = `<span class="pagination-info">${filteredGang.length} kayıt</span>`;
+    } else {
+        let html = `<button ${gangPage === 1 ? 'disabled' : ''} onclick="goGangPage(${gangPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+        for (let i = 1; i <= pages; i++) html += `<button class="${i === gangPage ? 'active' : ''}" onclick="goGangPage(${i})">${i}</button>`;
+        html += `<button ${gangPage === pages ? 'disabled' : ''} onclick="goGangPage(${gangPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+        html += `<span class="pagination-info">${filteredGang.length} kayıt</span>`;
+        pag.innerHTML = html;
+    }
+}
+function goGangPage(p) {
+    const pages = Math.ceil(filteredGang.length / PAGE_SIZE) || 1;
+    if (p < 1 || p > pages) return;
+    gangPage = p;
+    renderGangList();
+}
+function openGangForm() {
+    document.getElementById('gangFormCard').style.display = 'block';
+    document.getElementById('gangEditId').value = '';
+    document.getElementById('gangFormTitle').textContent = 'Yeni Gang Bureau Kaydı';
+    document.getElementById('gangCategory').value = currentGangCat;
+    updateGangFormFields();
+    // reset fields
+    ['gangDate','gangInvestigators','gangSubject','gangContent','gangFirstName','gangLastName','gangNationality','gangPhone','gangProperties','gangTrackContent','gangFactionName','gangFactionType','gangFactionHQ','gangFactionLocation','gangFactionCrimes','gangFactionMembers','gangFactionHistory'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('gangGender').value = 'Erkek';
+    ['gangPhotoInputs','gangPhotoInputs2','gangPhotoInputs3'].forEach(cid => {
+        const box = document.getElementById(cid);
+        if (box) box.innerHTML = `<div class="photo-row"><input type="text" class="form-control gang-photo-url" placeholder="https://..."><button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('${cid}')"><i class="fa-solid fa-plus"></i></button></div>`;
+    });
+    document.getElementById('gangFormCard').scrollIntoView({ behavior: 'smooth' });
+}
+function closeGangForm() { document.getElementById('gangFormCard').style.display = 'none'; }
+
+function submitGangRecord() {
+    if (!canAccessGang()) return alert('Yetkiniz yok.');
+    const editId = document.getElementById('gangEditId').value;
+    const category = document.getElementById('gangCategory').value;
+    const photos = collectPhotos('.gang-photo-url');
+    let data = { category, photos };
+
+    if (category === 'Saha Araştırma Raporu') {
+        const subject = document.getElementById('gangSubject').value.trim();
+        const content = document.getElementById('gangContent').value.trim();
+        if (!subject || !content) return alert('Konu ve içerik zorunlu.');
+        data = {
+            ...data,
+            title: subject,
+            subject,
+            content,
+            reportDate: document.getElementById('gangDate').value || '',
+            investigators: document.getElementById('gangInvestigators').value.trim(),
+            preview: content
+        };
+    } else if (category === 'Şahıs Takip Raporu') {
+        const firstName = document.getElementById('gangFirstName').value.trim();
+        const lastName = document.getElementById('gangLastName').value.trim();
+        const trackContent = document.getElementById('gangTrackContent').value.trim();
+        if (!firstName || !trackContent) return alert('Ad ve takip içeriği zorunlu.');
+        data = {
+            ...data,
+            title: firstName + ' ' + lastName,
+            firstName, lastName,
+            nationality: document.getElementById('gangNationality').value.trim(),
+            gender: document.getElementById('gangGender').value,
+            phone: document.getElementById('gangPhone').value.trim(),
+            properties: document.getElementById('gangProperties').value.trim(),
+            trackContent,
+            preview: trackContent
+        };
+    } else {
+        const factionName = document.getElementById('gangFactionName').value.trim();
+        const factionHistory = document.getElementById('gangFactionHistory').value.trim();
+        if (!factionName || !factionHistory) return alert('Yapılanma ismi ve detay zorunlu.');
+        const hq = document.getElementById('gangFactionHQ').value.trim();
+        if (hq && (hq.startsWith('http://') || hq.startsWith('https://'))) {
+            if (!photos.includes(hq)) photos.unshift(hq);
+        }
+        data = {
+            ...data,
+            title: factionName,
+            factionName,
+            factionType: document.getElementById('gangFactionType').value.trim(),
+            factionHQ: hq,
+            factionLocation: document.getElementById('gangFactionLocation').value.trim(),
+            factionCrimes: document.getElementById('gangFactionCrimes').value.trim(),
+            factionMembers: document.getElementById('gangFactionMembers').value.trim(),
+            factionHistory,
+            photos,
+            preview: factionHistory
+        };
+    }
+
+    if (editId) {
+        db.collection('gang').doc(editId).update(data)
+            .then(() => { showToast('Güncellendi', 'Gang kaydı kaydedildi.'); closeGangForm(); });
+    } else {
+        db.collection('gang').add({
+            ...data,
+            authorId: currentUserId,
+            officer: currentUserData.name + ' (' + currentUserData.rank + ')',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => { showToast('Kayıt Eklendi', 'Gang Bureau\'ya işlendi.'); closeGangForm(); });
+    }
+}
+
+function openGangDetail(id) {
+    const r = allGangRecords.find(x => x.id === id);
+    if (!r) return;
+    let body = '';
+    if (r.category === 'Saha Araştırma Raporu') {
+        body = `Rapor Tarihi: ${r.reportDate || '-'}\nSoruşturmacılar: ${r.investigators || '-'}\nKonu: ${r.subject || '-'}\n\n${r.content || ''}`;
+    } else if (r.category === 'Şahıs Takip Raporu') {
+        body = `Ad: ${r.firstName || '-'}\nSoyad: ${r.lastName || '-'}\nUyruk: ${r.nationality || '-'}\nCinsiyet: ${r.gender || '-'}\nTelefon: ${r.phone || '-'}\nMülkler: ${r.properties || '-'}\n\nTakip İçeriği:\n${r.trackContent || ''}`;
+    } else {
+        body = `İsim: ${r.factionName || '-'}\nTür: ${r.factionType || '-'}\nKonum: ${r.factionLocation || '-'}\nSuçlar: ${r.factionCrimes || '-'}\nBağlantılı Şahıslar: ${r.factionMembers || '-'}\n\nSuç Bağlantısı & Geçmiş:\n${r.factionHistory || ''}`;
+    }
+    // reuse detail modal
+    document.getElementById('detailTitle').textContent = r.title || 'Gang Kaydı';
+    document.getElementById('detailCategory').textContent = r.category || 'Gang';
+    document.getElementById('detailDate').textContent = formatDate(r.createdAt);
+    document.getElementById('detailSuspects').textContent = r.firstName ? (r.firstName + ' ' + (r.lastName || '')) : (r.factionName || r.subject || '-');
+    document.getElementById('detailOfficer').textContent = r.officer || '-';
+    document.getElementById('detailBody').textContent = body;
+    const photos = r.photos || [];
+    const photoSec = document.getElementById('detailPhotosSection');
+    const photoBox = document.getElementById('detailPhotos');
+    if (photoSec && photoBox) {
+        if (photos.length) {
+            photoSec.style.display = 'block';
+            photoBox.innerHTML = photos.map(url =>
+                `<img src="${esc(url)}" alt="Fotoğraf" onclick="openLightbox('${esc(url)}')" onerror="this.style.display='none'">`
+            ).join('');
+        } else {
+            photoSec.style.display = 'none';
+            photoBox.innerHTML = '';
+        }
+    }
+    let acts = '';
+    if (canAccessGang()) {
+        acts += `<button class="btn btn-warning btn-sm" onclick="closeDetail(); editGangRecord('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>`;
+        acts += `<button class="btn btn-danger btn-sm" onclick="closeDetail(); deleteGangRecord('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
+    }
+    document.getElementById('detailActions').innerHTML = acts;
+    document.getElementById('detailModal').classList.add('show');
+    playClick();
+}
+
+function editGangRecord(id) {
+    const r = allGangRecords.find(x => x.id === id);
+    if (!r) return;
+    openGangForm();
+    document.getElementById('gangEditId').value = r.id;
+    document.getElementById('gangFormTitle').textContent = 'Gang Kaydını Düzenle';
+    document.getElementById('gangCategory').value = r.category;
+    updateGangFormFields();
+    if (r.category === 'Saha Araştırma Raporu') {
+        document.getElementById('gangDate').value = r.reportDate || '';
+        document.getElementById('gangInvestigators').value = r.investigators || '';
+        document.getElementById('gangSubject').value = r.subject || '';
+        document.getElementById('gangContent').value = r.content || '';
+    } else if (r.category === 'Şahıs Takip Raporu') {
+        document.getElementById('gangFirstName').value = r.firstName || '';
+        document.getElementById('gangLastName').value = r.lastName || '';
+        document.getElementById('gangNationality').value = r.nationality || '';
+        document.getElementById('gangGender').value = r.gender || 'Erkek';
+        document.getElementById('gangPhone').value = r.phone || '';
+        document.getElementById('gangProperties').value = r.properties || '';
+        document.getElementById('gangTrackContent').value = r.trackContent || '';
+    } else {
+        document.getElementById('gangFactionName').value = r.factionName || '';
+        document.getElementById('gangFactionType').value = r.factionType || '';
+        document.getElementById('gangFactionHQ').value = r.factionHQ || '';
+        document.getElementById('gangFactionLocation').value = r.factionLocation || '';
+        document.getElementById('gangFactionCrimes').value = r.factionCrimes || '';
+        document.getElementById('gangFactionMembers').value = r.factionMembers || '';
+        document.getElementById('gangFactionHistory').value = r.factionHistory || '';
+    }
+    const photos = (r.photos && r.photos.length) ? r.photos : [''];
+    const boxId = r.category === 'Saha Araştırma Raporu' ? 'gangPhotoInputs' : (r.category === 'Şahıs Takip Raporu' ? 'gangPhotoInputs2' : 'gangPhotoInputs3');
+    const box = document.getElementById(boxId);
+    box.innerHTML = '';
+    photos.forEach((url, i) => {
+        const row = document.createElement('div');
+        row.className = 'photo-row';
+        row.innerHTML = `<input type="text" class="form-control gang-photo-url" value="${esc(url)}" placeholder="https://...">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="${i === 0 ? "addPhotoInput('" + boxId + "')" : "this.parentElement.remove()"}"><i class="fa-solid fa-${i === 0 ? 'plus' : 'minus'}"></i></button>`;
+        box.appendChild(row);
+    });
+}
+function deleteGangRecord(id) {
+    openConfirm('Kayıt Silinsin mi?', 'Bu işlem geri alınamaz.', () => {
+        db.collection('gang').doc(id).delete().then(() => showToast('Silindi', 'Gang kaydı kaldırıldı.'));
     });
 }
 </script>
