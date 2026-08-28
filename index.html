@@ -168,7 +168,7 @@
         .profile-info .name {
             font-weight: 600; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .profile-info .rank { font-size: 0.7rem; color: var(--gold); }
+        .profile-info .rank { font-size: 0.7rem; font-weight: 600; }
         .logout-btn {
             color: var(--red); background: none; border: none; cursor: pointer;
             font-size: 0.75rem; padding: 2px 0; margin-top: 2px; display: block;
@@ -231,9 +231,61 @@
         .report-title { font-size: 1.05rem; font-weight: 600; color: var(--gold); }
         .badge-tag {
             display: inline-flex; align-items: center; font-size: 0.7rem; font-weight: 600;
-            padding: 4px 10px; border-radius: 20px; background: var(--gold-dim); color: var(--gold);
-            border: 1px solid rgba(212,175,55,0.2); white-space: nowrap;
+            padding: 4px 10px; border-radius: 20px; background: rgba(0,120,255,0.15); color: #0078ff;
+            border: 1px solid rgba(0,120,255,0.3); white-space: nowrap;
         }
+        .badge-tag.rank-lt {
+            background: rgba(22, 101, 52, 0.22); color: #16a34a;
+            border-color: rgba(22, 101, 52, 0.45);
+        }
+        .badge-tag.rank-sgt {
+            background: rgba(220, 38, 38, 0.15); color: #ef4444;
+            border-color: rgba(220, 38, 38, 0.4);
+        }
+        .badge-tag.rank-other {
+            background: rgba(0, 120, 255, 0.15); color: #0078ff;
+            border-color: rgba(0, 120, 255, 0.3);
+        }
+        .profile-info .rank.rank-lt { color: #16a34a; }
+        .profile-info .rank.rank-sgt { color: #ef4444; }
+        .profile-info .rank.rank-other { color: #0078ff; }
+        .photo-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px; margin-top: 8px;
+        }
+        .photo-grid img {
+            width: 100%; height: 130px; object-fit: cover; border-radius: 10px;
+            border: 1px solid var(--border); cursor: pointer; transition: var(--transition);
+        }
+        .photo-grid img:hover { border-color: var(--blue); transform: scale(1.02); }
+        .photo-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .photo-row input { flex: 1; }
+        .lightbox {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .lightbox.show { display: flex; }
+        .lightbox img { max-width: 95%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+        .lightbox-close {
+            position: absolute; top: 20px; right: 24px; background: none; border: none;
+            color: #fff; font-size: 1.8rem; cursor: pointer;
+        }
+        .nav-item.detective { color: #a78bfa; }
+        .nav-item.detective.active {
+            background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.3); color: #c4b5fd;
+        }
+        .det-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .det-tab {
+            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-muted); cursor: pointer;
+            font-size: 0.85rem; font-family: inherit; transition: var(--transition);
+        }
+        .det-tab:hover { border-color: #a78bfa; color: var(--text); }
+        .det-tab.active {
+            background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.35);
+            color: #c4b5fd; font-weight: 600;
+        }
+        .btn-info { background: #0ea5e9; }
         .report-meta {
             font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;
             display: flex; flex-wrap: wrap; gap: 6px 14px;
@@ -457,8 +509,16 @@
         <div class="detail-section"><label>İlgili Kişiler / Şüpheliler</label><div class="value" id="detailSuspects">-</div></div>
         <div class="detail-section"><label>Raporlayan Memur</label><div class="value" id="detailOfficer">-</div></div>
         <div class="detail-section"><label>Detaylar</label><div class="value" id="detailBody">-</div></div>
+        <div class="detail-section" id="detailPhotosSection" style="display:none;">
+            <label>Fotoğraflar</label>
+            <div class="photo-grid" id="detailPhotos"></div>
+        </div>
         <div class="modal-actions" id="detailActions" style="justify-content:flex-end;"></div>
     </div>
+</div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" type="button" onclick="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
+    <img id="lightboxImg" src="" alt="Fotoğraf" onclick="event.stopPropagation()">
 </div>
 
 <div class="auth-screen" id="authScreen">
@@ -502,6 +562,9 @@
         </div>
         <div class="nav-item" data-tab="handbook" onclick="switchTab('handbook', this)">
             <i class="fa-solid fa-book"></i> El Kitabı
+        </div>
+        <div class="nav-item detective" id="detectiveNav" style="display:none;" data-tab="detective" onclick="switchTab('detective', this)">
+            <i class="fa-solid fa-user-secret"></i> Dedektif Büro
         </div>
         <div class="nav-label">İşlemler</div>
         <div class="nav-item" data-tab="newReport" onclick="switchTab('newReport', this)">
@@ -662,11 +725,80 @@
                     <label>Rapor Detayları</label>
                     <textarea id="repDetails" class="form-control" rows="7" placeholder="Olayın detaylı özeti..."></textarea>
                 </div>
+                <div class="form-group">
+                    <label>Fotoğraf URL'leri (isteğe bağlı)</label>
+                    <div id="repPhotoInputs">
+                        <div class="photo-row">
+                            <input type="text" class="form-control rep-photo-url" placeholder="https://imgur.com/...">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('repPhotoInputs')"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;">Linkler İncele'de doğrudan fotoğraf olarak görünür.</p>
+                </div>
                 <div style="display:flex;gap:10px;margin-top:8px;">
                     <button class="btn btn-success" id="saveReportBtn" onclick="submitReport()">
                         <i class="fa-solid fa-floppy-disk"></i> Kaydet
                     </button>
                     <button class="btn btn-ghost" onclick="resetReportForm(); switchTab('reports')">İptal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DETECTIVE BUREAU -->
+        <div id="tab-detective" style="display:none;">
+            <div class="page-header">
+                <div>
+                    <h2>Dedektif Büro Veritabanı</h2>
+                    <p class="desc">Detective I / II ve üst yönetim erişebilir</p>
+                </div>
+                <button class="btn btn-success btn-sm" onclick="openDetForm()">
+                    <i class="fa-solid fa-plus"></i> Yeni Kayıt
+                </button>
+            </div>
+            <div class="det-tabs">
+                <button class="det-tab active" onclick="switchDet('FID Card', this)">FID Card</button>
+                <button class="det-tab" onclick="switchDet('Fraksiyon Raporu', this)">Fraksiyon Raporları</button>
+                <button class="det-tab" onclick="switchDet('Şahıs Takip Raporu', this)">Şahıs Takip</button>
+                <button class="det-tab" onclick="switchDet('Cinayet Raporu', this)">Cinayet Raporları</button>
+            </div>
+            <div id="detList"></div>
+            <div class="pagination" id="detPagination"></div>
+            <div class="card" id="detFormCard" style="display:none;margin-top:20px;">
+                <h3 id="detFormTitle" style="margin-bottom:16px;">Yeni Dedektif Kaydı</h3>
+                <input type="hidden" id="detEditId" value="">
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="detCategory" class="form-control">
+                        <option value="FID Card">FID Card</option>
+                        <option value="Fraksiyon Raporu">Fraksiyon Raporu</option>
+                        <option value="Şahıs Takip Raporu">Şahıs Takip Raporu</option>
+                        <option value="Cinayet Raporu">Cinayet Raporu</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Başlık</label>
+                    <input type="text" id="detTitle" class="form-control" placeholder="Kayıt başlığı">
+                </div>
+                <div class="form-group">
+                    <label>İlgili Kişi / Fraksiyon</label>
+                    <input type="text" id="detSubject" class="form-control" placeholder="İsim veya fraksiyon">
+                </div>
+                <div class="form-group">
+                    <label>Detaylar</label>
+                    <textarea id="detDetails" class="form-control" rows="5" placeholder="Açıklama..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Fotoğraf URL'leri</label>
+                    <div id="detPhotoInputs">
+                        <div class="photo-row">
+                            <input type="text" class="form-control det-photo-url" placeholder="https://...">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('detPhotoInputs')"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-success" onclick="submitDetRecord()"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+                    <button class="btn btn-ghost" onclick="closeDetForm()">İptal</button>
                 </div>
             </div>
         </div>
@@ -773,7 +905,41 @@ const attendanceRanks = [
     "Police Sergeant I", "Police Sergeant II",
     "Police Lieutenant I", "Police Lieutenant II"
 ];
+const detectiveRanks = ["Detective I", "Detective II", "Police Lieutenant I", "Police Lieutenant II"];
 const LOGO = "https://i.imgur.com/6VBx3io.png";
+let allDetRecords = [];
+let filteredDet = [];
+let detPage = 1;
+let currentDetCat = 'FID Card';
+
+function rankClass(rank) {
+    if (!rank) return 'rank-other';
+    if (rank.includes('Lieutenant')) return 'rank-lt';
+    if (rank.includes('Sergeant')) return 'rank-sgt';
+    return 'rank-other';
+}
+function canAccessDetective() {
+    return currentUserData && (detectiveRanks.includes(currentUserData.rank) || currentUserData.isAdmin || authorizedRanks.includes(currentUserData.rank));
+}
+function addPhotoInput(containerId) {
+    const box = document.getElementById(containerId);
+    const cls = containerId.includes('det') ? 'det-photo-url' : 'rep-photo-url';
+    const row = document.createElement('div');
+    row.className = 'photo-row';
+    row.innerHTML = `<input type="text" class="form-control ${cls}" placeholder="https://...">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()"><i class="fa-solid fa-minus"></i></button>`;
+    box.appendChild(row);
+}
+function collectPhotos(selector) {
+    return Array.from(document.querySelectorAll(selector))
+        .map(i => i.value.trim())
+        .filter(u => u && (u.startsWith('http://') || u.startsWith('https://')));
+}
+function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
 
 const UNIT_CODES = [
     { letter: "A", name: "Adam", desc: "İki üniformalı memurdan oluşan standart iki kişilik devriye ünitesi" },
@@ -977,7 +1143,9 @@ auth.onAuthStateChanged(user => {
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('app').classList.add('show');
             document.getElementById('userName').textContent = currentUserData.name + ' (#' + currentUserData.badge + ')';
-            document.getElementById('userRank').textContent = currentUserData.rank;
+            const rankEl = document.getElementById('userRank');
+            rankEl.textContent = currentUserData.rank;
+            rankEl.className = 'rank ' + rankClass(currentUserData.rank);
             document.getElementById('userAvatar').src = currentUserData.avatar || LOGO;
 
             if (isMgmt()) {
@@ -990,6 +1158,10 @@ auth.onAuthStateChanged(user => {
                 document.getElementById('attendanceNav').style.display = 'flex';
                 loadAttendanceUI();
                 loadAttendanceHistory();
+            }
+            if (canAccessDetective()) {
+                document.getElementById('detectiveNav').style.display = 'flex';
+                loadDetRecords();
             }
             loadReports();
             loadOfficers();
@@ -1005,7 +1177,7 @@ function logout() { auth.signOut(); }
 
 function switchTab(tab, el) {
     if (tab !== 'newReport') resetReportForm();
-    ['dashboard','reports','officers','handbook','newReport','attendance','admin'].forEach(t => {
+    ['dashboard','reports','officers','handbook','detective','newReport','attendance','admin'].forEach(t => {
         const e = document.getElementById('tab-' + t);
         if (e) e.style.display = 'none';
     });
@@ -1064,17 +1236,16 @@ function renderReportsPage() {
     const canDel = isMgmt();
     box.innerHTML = pageItems.map(r => {
         const canEdit = r.authorId === currentUserId || canDel;
-        let actions = '';
-        if (canEdit || canDel) {
-            actions = `<div class="report-actions" onclick="event.stopPropagation()">`;
-            if (canEdit) actions += `<button class="btn btn-warning btn-sm" onclick="editReport('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>`;
-            if (canDel) actions += `<button class="btn btn-danger btn-sm" onclick="deleteReport('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
-            actions += `</div>`;
-        }
+        const hasPhotos = r.photos && r.photos.length;
+        let actions = `<div class="report-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-info btn-sm" onclick="openDetail('${r.id}')"><i class="fa-solid fa-eye"></i> İncele</button>`;
+        if (canEdit) actions += `<button class="btn btn-warning btn-sm" onclick="editReport('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>`;
+        if (canDel) actions += `<button class="btn btn-danger btn-sm" onclick="deleteReport('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
+        actions += `</div>`;
         return `
             <div class="card report-card" onclick="openDetail('${r.id}')">
                 <div class="report-top">
-                    <div class="report-title">${esc(r.title)}</div>
+                    <div class="report-title">${esc(r.title)}${hasPhotos ? ' <i class="fa-solid fa-image" style="color:var(--blue);font-size:0.85rem;"></i>' : ''}</div>
                     <span class="badge-tag">${esc(r.category || 'Vaka Raporu')}</span>
                 </div>
                 <div class="report-meta">
@@ -1141,20 +1312,41 @@ function renderRecent() {
     `).join('');
 }
 
-function openDetail(id) {
-    const r = allReports.find(x => x.id === id);
+function openDetail(id, isDet) {
+    const r = isDet
+        ? allDetRecords.find(x => x.id === id)
+        : allReports.find(x => x.id === id);
     if (!r) return;
     document.getElementById('detailTitle').textContent = r.title;
-    document.getElementById('detailCategory').textContent = r.category || 'Vaka Raporu';
+    document.getElementById('detailCategory').textContent = r.category || (isDet ? 'Kayıt' : 'Vaka Raporu');
     document.getElementById('detailDate').textContent = formatDate(r.createdAt);
-    document.getElementById('detailSuspects').textContent = r.suspects || 'Yok';
+    document.getElementById('detailSuspects').textContent = r.suspects || r.subject || 'Yok';
     document.getElementById('detailOfficer').textContent = r.officer || '-';
     document.getElementById('detailBody').textContent = r.details || '';
-    const canDel = isMgmt();
+    const photos = r.photos || [];
+    const photoSec = document.getElementById('detailPhotosSection');
+    const photoBox = document.getElementById('detailPhotos');
+    if (photoSec && photoBox) {
+        if (photos.length) {
+            photoSec.style.display = 'block';
+            photoBox.innerHTML = photos.map(url =>
+                `<img src="${esc(url)}" alt="Fotoğraf" onclick="openLightbox('${esc(url)}')" onerror="this.style.display='none'">`
+            ).join('');
+        } else {
+            photoSec.style.display = 'none';
+            photoBox.innerHTML = '';
+        }
+    }
+    const canDel = isMgmt() || (isDet && canAccessDetective());
     const canEdit = r.authorId === currentUserId || canDel;
     let acts = '';
-    if (canEdit) acts += `<button class="btn btn-warning btn-sm" onclick="closeDetail(); editReport('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>`;
-    if (canDel) acts += `<button class="btn btn-danger btn-sm" onclick="closeDetail(); deleteReport('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
+    if (!isDet) {
+        if (canEdit) acts += `<button class="btn btn-warning btn-sm" onclick="closeDetail(); editReport('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>`;
+        if (canDel) acts += `<button class="btn btn-danger btn-sm" onclick="closeDetail(); deleteReport('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
+    } else {
+        if (canEdit) acts += `<button class="btn btn-warning btn-sm" onclick="closeDetail(); editDetRecord('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>`;
+        if (canDel) acts += `<button class="btn btn-danger btn-sm" onclick="closeDetail(); deleteDetRecord('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
+    }
     document.getElementById('detailActions').innerHTML = acts;
     document.getElementById('detailModal').classList.add('show');
     playClick();
@@ -1167,13 +1359,15 @@ function submitReport() {
     const title = document.getElementById('repTitle').value.trim();
     const suspects = document.getElementById('repSuspects').value.trim();
     const details = document.getElementById('repDetails').value.trim();
+    const photos = collectPhotos('.rep-photo-url');
     if (!title || !details) return alert('Başlık ve detay zorunlu.');
+    const data = { category, title, suspects, details, photos };
     if (editId) {
-        db.collection('reports').doc(editId).update({ category, title, suspects, details })
+        db.collection('reports').doc(editId).update(data)
             .then(() => { showToast('Güncellendi', 'Rapor kaydedildi.'); resetReportForm(); switchTab('reports'); });
     } else {
         db.collection('reports').add({
-            category, title, suspects, details,
+            ...data,
             authorId: currentUserId,
             officer: currentUserData.name + ' (' + currentUserData.rank + ')',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1189,6 +1383,16 @@ function editReport(id) {
     document.getElementById('repTitle').value = r.title || '';
     document.getElementById('repSuspects').value = r.suspects || '';
     document.getElementById('repDetails').value = r.details || '';
+    const box = document.getElementById('repPhotoInputs');
+    box.innerHTML = '';
+    const photos = (r.photos && r.photos.length) ? r.photos : [''];
+    photos.forEach((url, i) => {
+        const row = document.createElement('div');
+        row.className = 'photo-row';
+        row.innerHTML = `<input type="text" class="form-control rep-photo-url" value="${esc(url)}" placeholder="https://...">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="${i === 0 ? "addPhotoInput('repPhotoInputs')" : "this.parentElement.remove()"}"><i class="fa-solid fa-${i === 0 ? 'plus' : 'minus'}"></i></button>`;
+        box.appendChild(row);
+    });
     document.getElementById('reportFormTitle').textContent = 'Raporu Düzenle';
     document.getElementById('saveReportBtn').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Değişiklikleri Kaydet';
     switchTab('newReport');
@@ -1205,6 +1409,11 @@ function resetReportForm() {
     document.getElementById('repTitle').value = '';
     document.getElementById('repSuspects').value = '';
     document.getElementById('repDetails').value = '';
+    document.getElementById('repPhotoInputs').innerHTML = `
+        <div class="photo-row">
+            <input type="text" class="form-control rep-photo-url" placeholder="https://imgur.com/...">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('repPhotoInputs')"><i class="fa-solid fa-plus"></i></button>
+        </div>`;
     document.getElementById('reportFormTitle').textContent = 'Yeni Rapor Kaydı';
     document.getElementById('saveReportBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Kaydet';
 }
@@ -1222,7 +1431,7 @@ function loadOfficers() {
                     <span class="officer-badge">#${esc(u.badge || '000')}</span>
                     <img src="${esc(u.avatar || LOGO)}" class="officer-avatar" alt="" onerror="this.src='${LOGO}'">
                     <div class="officer-name">${esc(u.name || 'Bilinmeyen')}</div>
-                    <span class="badge-tag">${esc(u.rank || 'Police Officer I')}</span>
+                    <span class="badge-tag ${rankClass(u.rank)}">${esc(u.rank || 'Police Officer I')}</span>
                 </div>`;
         });
         if (!snap.size) {
@@ -1456,6 +1665,139 @@ function updateStats() {
     document.getElementById('statPending').textContent = pendingCount;
     document.getElementById('statMyReports').textContent =
         allReports.filter(r => r.authorId === currentUserId).length;
+}
+
+/* ========== DETECTIVE BUREAU ========== */
+function loadDetRecords() {
+    db.collection('detective').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        allDetRecords = [];
+        snap.forEach(d => allDetRecords.push({ id: d.id, ...d.data() }));
+        renderDetList();
+    }, err => console.warn('detective load:', err));
+}
+function switchDet(cat, btn) {
+    currentDetCat = cat;
+    detPage = 1;
+    document.querySelectorAll('.det-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderDetList();
+    playClick();
+}
+function renderDetList() {
+    const box = document.getElementById('detList');
+    if (!box) return;
+    filteredDet = allDetRecords.filter(r => r.category === currentDetCat);
+    const start = (detPage - 1) * PAGE_SIZE;
+    const pageItems = filteredDet.slice(start, start + PAGE_SIZE);
+    if (!filteredDet.length) {
+        box.innerHTML = `<div class="card empty-state"><i class="fa-solid fa-folder-open"></i><p>Bu kategoride kayıt yok.</p></div>`;
+        const pag = document.getElementById('detPagination');
+        if (pag) pag.innerHTML = '';
+        return;
+    }
+    box.innerHTML = pageItems.map(r => {
+        const hasPhotos = r.photos && r.photos.length;
+        return `
+            <div class="card report-card" onclick="openDetail('${r.id}', true)">
+                <div class="report-top">
+                    <div class="report-title">${esc(r.title)}${hasPhotos ? ' <i class="fa-solid fa-image" style="color:#a78bfa;font-size:0.85rem;"></i>' : ''}</div>
+                    <span class="badge-tag">${esc(r.category)}</span>
+                </div>
+                <div class="report-meta">
+                    <span><strong>İlgili:</strong> ${esc(r.subject || 'Yok')}</span>
+                    <span><strong>Memur:</strong> ${esc(r.officer || '-')}</span>
+                    <span class="report-date"><i class="fa-regular fa-clock"></i> ${formatDate(r.createdAt)}</span>
+                </div>
+                <div class="report-preview">${esc(r.details)}</div>
+                <div class="report-actions" onclick="event.stopPropagation()">
+                    <button class="btn btn-info btn-sm" onclick="openDetail('${r.id}', true)"><i class="fa-solid fa-eye"></i> İncele</button>
+                    <button class="btn btn-warning btn-sm" onclick="editDetRecord('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteDetRecord('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>
+                </div>
+            </div>`;
+    }).join('');
+    const pages = Math.ceil(filteredDet.length / PAGE_SIZE) || 1;
+    const pag = document.getElementById('detPagination');
+    if (!pag) return;
+    if (filteredDet.length <= PAGE_SIZE) {
+        pag.innerHTML = `<span class="pagination-info">${filteredDet.length} kayıt</span>`;
+    } else {
+        let html = `<button ${detPage === 1 ? 'disabled' : ''} onclick="goDetPage(${detPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+        for (let i = 1; i <= pages; i++) html += `<button class="${i === detPage ? 'active' : ''}" onclick="goDetPage(${i})">${i}</button>`;
+        html += `<button ${detPage === pages ? 'disabled' : ''} onclick="goDetPage(${detPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+        html += `<span class="pagination-info">${filteredDet.length} kayıt</span>`;
+        pag.innerHTML = html;
+    }
+}
+function goDetPage(p) {
+    const pages = Math.ceil(filteredDet.length / PAGE_SIZE) || 1;
+    if (p < 1 || p > pages) return;
+    detPage = p;
+    renderDetList();
+}
+function openDetForm() {
+    document.getElementById('detFormCard').style.display = 'block';
+    document.getElementById('detEditId').value = '';
+    document.getElementById('detFormTitle').textContent = 'Yeni Dedektif Kaydı';
+    document.getElementById('detCategory').value = currentDetCat;
+    document.getElementById('detTitle').value = '';
+    document.getElementById('detSubject').value = '';
+    document.getElementById('detDetails').value = '';
+    document.getElementById('detPhotoInputs').innerHTML = `
+        <div class="photo-row">
+            <input type="text" class="form-control det-photo-url" placeholder="https://...">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('detPhotoInputs')"><i class="fa-solid fa-plus"></i></button>
+        </div>`;
+    document.getElementById('detFormCard').scrollIntoView({ behavior: 'smooth' });
+}
+function closeDetForm() { document.getElementById('detFormCard').style.display = 'none'; }
+function submitDetRecord() {
+    if (!canAccessDetective()) return alert('Yetkiniz yok.');
+    const editId = document.getElementById('detEditId').value;
+    const category = document.getElementById('detCategory').value;
+    const title = document.getElementById('detTitle').value.trim();
+    const subject = document.getElementById('detSubject').value.trim();
+    const details = document.getElementById('detDetails').value.trim();
+    const photos = collectPhotos('.det-photo-url');
+    if (!title || !details) return alert('Başlık ve detay zorunlu.');
+    const data = { category, title, subject, details, photos };
+    if (editId) {
+        db.collection('detective').doc(editId).update(data)
+            .then(() => { showToast('Güncellendi', 'Kayıt kaydedildi.'); closeDetForm(); });
+    } else {
+        db.collection('detective').add({
+            ...data,
+            authorId: currentUserId,
+            officer: currentUserData.name + ' (' + currentUserData.rank + ')',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => { showToast('Kayıt Eklendi', 'Dedektif büroya işlendi.'); closeDetForm(); });
+    }
+}
+function editDetRecord(id) {
+    const r = allDetRecords.find(x => x.id === id);
+    if (!r) return;
+    openDetForm();
+    document.getElementById('detEditId').value = r.id;
+    document.getElementById('detFormTitle').textContent = 'Kaydı Düzenle';
+    document.getElementById('detCategory').value = r.category;
+    document.getElementById('detTitle').value = r.title || '';
+    document.getElementById('detSubject').value = r.subject || '';
+    document.getElementById('detDetails').value = r.details || '';
+    const box = document.getElementById('detPhotoInputs');
+    box.innerHTML = '';
+    const photos = (r.photos && r.photos.length) ? r.photos : [''];
+    photos.forEach((url, i) => {
+        const row = document.createElement('div');
+        row.className = 'photo-row';
+        row.innerHTML = `<input type="text" class="form-control det-photo-url" value="${esc(url)}" placeholder="https://...">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="${i === 0 ? "addPhotoInput('detPhotoInputs')" : "this.parentElement.remove()"}"><i class="fa-solid fa-${i === 0 ? 'plus' : 'minus'}"></i></button>`;
+        box.appendChild(row);
+    });
+}
+function deleteDetRecord(id) {
+    openConfirm('Kayıt Silinsin mi?', 'Bu işlem geri alınamaz.', () => {
+        db.collection('detective').doc(id).delete().then(() => showToast('Silindi', 'Kayıt kaldırıldı.'));
+    });
 }
 </script>
 </body>
