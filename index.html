@@ -701,7 +701,7 @@
                 <div id="crimesA"></div>
                 <h3 style="margin:24px 0 14px;font-size:1.05rem;color:var(--orange);">B — Trafik Suçları</h3>
                 <div id="crimesB"></div>
-                <h3 style="margin:24px 0 14px;font-size:1.05rem;color:var(--red);">F — Federal Suçlar</h3>
+                <h3 style="margin:24px 0 14px;font-size:1.05rem;color:var(--red);">C — Federal Suçlar</h3>
                 <div id="crimesF"></div>
             </div>
             <div id="hb-rules" class="hb-section">
@@ -1143,42 +1143,44 @@ const RADIO_CODES = [
 ];
 
 const CRIMES_A = [
-    { code: "A1", title: "Silahsız / Silahlı Yaralama", penalty: "Silahsız yaralama: 30 gün. Silahla yaralama: 60 gün." },
-    { code: "A2", title: "Cinayet", penalty: "Bir sivili öldürmenin cezası 600 gündür, teşebbüs ise 500 gün." },
-    { code: "A3", title: "Hakaret", penalty: "Hakaretin cezası 5000$ para cezasıdır." },
-    { code: "A4", title: "Hırsızlık", penalty: "Hırsızlığın cezası 45 gündür." },
-    { code: "A5", title: "Kolluk Kuvvetlerine Direnmek", penalty: "Cezası 70 gündür." },
-    { code: "A6", title: "Madde Bulundurmak", penalty: "Cezası 90 gündür. 10 gram üzeri ise A7 suç alanına girer." },
-    { code: "A7", title: "Madde Satımı ve Üretimi", penalty: "Cezası 150 gündür." },
-    { code: "A8", title: "Yasadışı Kumar", penalty: "Oynamanın cezası 10000$ para cezasıdır. Oynatmanın cezası 10000$ + 100 gün hapis." },
-    { code: "A9", title: "Ruhsatsız Silah Bulundurmak", penalty: "a) Kesici delici alet: 50 gün\nb) Tabanca sınıfı: 100 gün\nc) SMG / Hafif makineli / Pompalı: 170 gün\nd) Ağır assault (AK47, M4): 250 gün" },
-    { code: "A10", title: "Kundaklama", penalty: "Kundaklanan mülkün 1,5 katı para cezası + 300 gün hapis." },
-    { code: "A11", title: "İşkence Etmek", penalty: "Cezası 400 gündür." },
-    { code: "A12", title: "Gasp", penalty: "Gasp edilen miktarın 1,7 katı para cezası + 190 gün hapis." },
-    { code: "A13", title: "Kaçırma ve Rehin Alma", penalty: "Cezası 500 gündür. Kolluk kuvvetlerine karşı yapıldıysa 2000 gün hapis." },
-    { code: "A14", title: "Tehdit", penalty: "3400$ para cezası ve 40 gün hapis." },
-    { code: "A15", title: "Kolluk Kuvvetlerine Saldırı", penalty: "Silahsız: 150 gün. Silahlı: 300 gün." }
+    { code: "A1", title: "Hakaret", penalty: "5000$ para cezası (boyuta göre 7000$'a kadar). Kamu görevlisine karşı: +20 gün hapis." },
+    { code: "A2", title: "Tehdit", penalty: "30–45 gün hapis + sabit 4000$ para cezası. Kamu görevlisine karşı: 30 gün hapis." },
+    { code: "A3", title: "Yaralama Amacıyla Saldırı (Silahsız)", penalty: "Sivil: 30–60 gün. Kamu görevlisine karşı: 80 gün." },
+    { code: "A4", title: "Yaralama Amacıyla Saldırı (Silahlı)", penalty: "a) Kesici/delici/kırıcı: 80 gün\nb) Ateşli silah: 120 gün\nKamu görevlisine karşı: 160 gün." },
+    { code: "A5", title: "Cinayet", penalty: "600 gün hapis. Ceza indirimi uygulanmaz. Kamu görevlisine karşı: 900 gün." },
+    { code: "A6", title: "Alıkoyma ve Kaçırma", penalty: "120 gün. Kaçırma sırasında darp varsa +40 gün. Kamu görevlisine karşı: 300 gün." },
+    { code: "A7", title: "Hırsızlık", penalty: "Boyuta göre 90–120 gün hapis." },
+    { code: "A8", title: "Soygun", penalty: "Silahsız: 100 gün. Silahlı: +50 gün arttırım." },
+    { code: "A9", title: "Vandalizm", penalty: "Boyuta göre 40–60 gün." },
+    { code: "A10", title: "Ruhsatsız Silah Bulundurmak", penalty: "a) Kesici-delici: 30 gün\nb) Tabanca: 60 gün\nc) Pompalı/SMG: 90 gün\nd) Taarruz tüfeği: 120 gün" },
+    { code: "A11", title: "Kundaklama", penalty: "200–300 gün + kundaklanan mülk değerinin 1,5 katı para cezası." },
+    { code: "A12", title: "Gasp", penalty: "40–70 gün hapis + gasp edilen miktarın 2 katı para cezası." },
+    { code: "A13", title: "Kolluk Kuvvetlerine Direnmek", penalty: "80 gün hapis." },
+    { code: "A14", title: "Madde Bulundurmak", penalty: "a) 20 gram ve altı: 40 gün\nb) 20 gram üstü: 70 gün" },
+    { code: "A15", title: "Madde Satışı", penalty: "120 gün hapis." },
+    { code: "A16", title: "Mülke İzinsiz Giriş", penalty: "40 gün hapis." }
 ];
 
 const CRIMES_B = [
-    { code: "B1", title: "Hız İhlali", penalty: "6000$ para cezası." },
-    { code: "B2", title: "Şerit İhlali", penalty: "7000$ para cezası." },
-    { code: "B3", title: "Hatalı Park", penalty: "4000$ para cezası." },
-    { code: "B4", title: "Trafik Kazasına Sebebiyet Vermek", penalty: "9000$ para cezası ve 90 gün hapis." },
-    { code: "B5", title: "Yasaklı Performans Arttırıcı Bulundurmak", penalty: "Araç 3 gün çekilir ve 10000$ para cezası uygulanır." },
-    { code: "B6", title: "Kanun Dışı Yarışmak", penalty: "140 gün hapis cezası." },
-    { code: "B7", title: "Ehliyetsiz Araç Kullanmak", penalty: "20000$ para cezası. İkinci tekrarda 70 gün hapis." },
-    { code: "B8", title: "Tehlikeli Araç Kullanmak", penalty: "İlk: 5000$. İkinci: 10000$. Üçüncü: ehliyete el koyulur." }
+    { code: "B1", title: "Hız İhlali", penalty: "2000$ para cezası." },
+    { code: "B2", title: "Şerit İhlali", penalty: "4000$ para cezası." },
+    { code: "B3", title: "Hatalı Sollama", penalty: "3500$ para cezası." },
+    { code: "B4", title: "Tehlikeli Araç Sürmek", penalty: "8000$ para cezası. Üçüncü tekrarda ehliyet iptal." },
+    { code: "B5", title: "Kasksız Motor Sürmek", penalty: "1000$ para cezası." },
+    { code: "B6", title: "Ehliyetsiz Araç Kullanmak", penalty: "İlk: 10000$. İkinci: 40 gün hapis." },
+    { code: "B7", title: "Hatalı Park", penalty: "1000$ para cezası." },
+    { code: "B8", title: "Performans Arttırıcı Eklenti", penalty: "Araç 2 gün kapalı garaj + 7000$ para cezası." },
+    { code: "B9", title: "Şehir İçinde Büyük Hacimli Araç", penalty: "2000$ para cezası. Üçüncü tekrarda ehliyete el koyma." }
 ];
 
 const CRIMES_F = [
-    { code: "F1", title: "Terör Örgütü Kurmak", penalty: "Müebbet hapis cezası; ardından mal varlıklarına el koyulur." },
-    { code: "F2", title: "Terör Örgütüne Üye Olmak veya Yataklık Etmek", penalty: "1000 gün hapis cezası." },
-    { code: "F3", title: "Silah Kaçakçılığı", penalty: "800 gün hapis cezası." },
-    { code: "F4", title: "İllegal Bir Organizasyon Düzenlemek", penalty: "600 gün hapis cezası." },
-    { code: "F5", title: "Suçluya Yardım ve Yataklık", penalty: "Yardım edilen suçların toplamının %50'si kadar ceza verilir." },
-    { code: "F6", title: "İllegal Bir Organizasyona Müdahil Olmak", penalty: "450 gün hapis cezası." },
-    { code: "F7", title: "Delilleri Yok Etmek", penalty: "120 gün hapis cezası." }
+    { code: "C1", title: "Delilleri Yok Etmek", penalty: "120 gün hapis." },
+    { code: "C2", title: "İllegal Bir Organizasyon Düzenlemek", penalty: "Boyuta göre 300–500 gün hapis." },
+    { code: "C3", title: "İllegal Bir Organizasyona Katılmak", penalty: "Boyuta göre 140–200 gün hapis." },
+    { code: "C4", title: "İllegal Suç Yapılanması Kurmak", penalty: "Lider: müebbet + mal varlığına el koyma. Üye: 500 gün." },
+    { code: "C5", title: "Suçluya Yardım ve Yataklık", penalty: "Yataklık edilen suçların toplamının 1/2'si oranında ceza." },
+    { code: "C6", title: "Silah Kaçakçılığı", penalty: "Sevkiyat boyutuna göre 150–300 gün." },
+    { code: "C7", title: "Uyuşturucu Kaçakçılığı", penalty: "Sevkiyat boyutuna göre 150–300 gün." }
 ];
 
 const CASE_LAW = [
