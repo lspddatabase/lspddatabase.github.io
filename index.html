@@ -286,6 +286,30 @@
             color: #c4b5fd; font-weight: 600;
         }
         .btn-info { background: #0ea5e9; }
+        .case-page {
+            border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px;
+            margin-bottom: 12px; background: var(--card); border-left: 3px solid #f97316;
+        }
+        .case-page .page-header-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+        }
+        .case-page .page-num {
+            font-weight: 800; color: #f97316; font-size: 0.85rem;
+        }
+        .case-page .page-meta { font-size: 0.75rem; color: var(--text-dim); }
+        .case-page .page-body { font-size: 0.9rem; color: var(--text); line-height: 1.6; white-space: pre-wrap; }
+        .case-person-box {
+            background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.25);
+            border-radius: 12px; padding: 16px 18px; margin-bottom: 18px;
+        }
+        .case-person-box h4 { color: #f97316; margin-bottom: 10px; font-size: 0.95rem; }
+        .case-person-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px 16px;
+            font-size: 0.85rem;
+        }
+        .case-person-grid span { color: var(--text-dim); }
+        .case-person-grid strong { color: var(--text); }
         .report-meta {
             font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;
             display: flex; flex-wrap: wrap; gap: 6px 14px;
@@ -664,6 +688,7 @@
                 <button class="hb-tab" onclick="switchHb('radio', this)">Telsiz Kodları</button>
                 <button class="hb-tab" onclick="switchHb('crimes', this)">Suçlar & Cezalar</button>
                 <button class="hb-tab" onclick="switchHb('rules', this)">Ceza İç Tüzüğü</button>
+                <button class="hb-tab" onclick="switchHb('cases', this)">Mahkeme Kararları</button>
             </div>
             <div id="hb-units" class="hb-section active">
                 <div class="code-grid" id="unitsGrid"></div>
@@ -694,6 +719,12 @@
                         <li>Üçüncü suç ve sonrasında cezalar <strong>1/2 oranında</strong> arttırılır.</li>
                     </ul>
                 </div>
+            </div>
+            <div id="hb-cases" class="hb-section">
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:18px;">
+                    ABD Yüksek Mahkemesi emsal kararları — saha uygulamasında bilmen gereken temel prensipler.
+                </p>
+                <div id="casesGrid"></div>
             </div>
         </div>
 
@@ -866,8 +897,12 @@
                     </div>
                 </div>
 
-                <!-- Şahıs Takip fields -->
+                <!-- Şahıs Takip fields — yeni dosya aç -->
                 <div id="gangFieldsPerson" style="display:none;">
+                    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px;">
+                        <i class="fa-solid fa-folder-open" style="color:#f97316;"></i>
+                        Yeni bir <strong>şahıs takip dosyası</strong> açılır. Sonradan aynı dosyaya yeni sayfalar eklenebilir; eski sayfalar silinmez.
+                    </p>
                     <div class="form-group"><label>Ad</label><input type="text" id="gangFirstName" class="form-control" placeholder="Ad"></div>
                     <div class="form-group"><label>Soyad</label><input type="text" id="gangLastName" class="form-control" placeholder="Soyad"></div>
                     <div class="form-group"><label>Uyruk</label><input type="text" id="gangNationality" class="form-control" placeholder="Uyruk"></div>
@@ -881,9 +916,9 @@
                     </div>
                     <div class="form-group"><label>Telefon Numarası</label><input type="text" id="gangPhone" class="form-control" placeholder="Telefon"></div>
                     <div class="form-group"><label>Kişinin Mülkleri</label><textarea id="gangProperties" class="form-control" rows="3" placeholder="Araç, ev, işletme vb."></textarea></div>
-                    <div class="form-group"><label>Takip İçeriği</label><textarea id="gangTrackContent" class="form-control" rows="5" placeholder="Takip detayları..."></textarea></div>
+                    <div class="form-group"><label>1. Sayfa — Takip İçeriği</label><textarea id="gangTrackContent" class="form-control" rows="5" placeholder="İlk sayfa içeriği..."></textarea></div>
                     <div class="form-group">
-                        <label>Ek Fotoğraflar (URL)</label>
+                        <label>1. Sayfa Ek Fotoğraflar (URL)</label>
                         <div id="gangPhotoInputs2">
                             <div class="photo-row">
                                 <input type="text" class="form-control gang-photo-url" placeholder="https://...">
@@ -1144,6 +1179,74 @@ const CRIMES_F = [
     { code: "F5", title: "Suçluya Yardım ve Yataklık", penalty: "Yardım edilen suçların toplamının %50'si kadar ceza verilir." },
     { code: "F6", title: "İllegal Bir Organizasyona Müdahil Olmak", penalty: "450 gün hapis cezası." },
     { code: "F7", title: "Delilleri Yok Etmek", penalty: "120 gün hapis cezası." }
+];
+
+const CASE_LAW = [
+    {
+        num: 1,
+        name: "Terry v. Ohio",
+        summary: "Bir memur, bir şahsın suça karıştığına dair Basit Şüpheye sahipse, şahsı kısa süreliğine durdurabilir (Terry Stop). Eğer şahsın silahlı ve tehlikeli olduğuna dair makul bir şüphesi varsa, şahsın kıyafetlerinin üzerinden (ceplerinin içine girmeden) sadece silah tespiti amaçlı dıştan yoklama (Frisk / Pat-down) yapabilir."
+    },
+    {
+        num: 2,
+        name: "Miranda v. Arizona",
+        summary: "Bir şüpheli gözaltına alındığı (kelepçelendiği) ve sorgulanacağı an, memur şahsa anayasal haklarını (sessiz kalma hakkı, avukat hakkı vb.) okumak zorundadır. Miranda hakları okunmadan yapılan sorgulardaki itiraflar ve ifadeler mahkemede delil olarak kullanılamaz. Ancak şüpheli sorgulanmayacaksa, sadece hücreye atılacaksa anında okunması zorunlu değildir."
+    },
+    {
+        num: 3,
+        name: "Tennessee v. Garner",
+        summary: "Memurlar, sadece kaçmakta olan silahsız ve tehlikesiz bir şüpheliyi durdurmak için ölümcül güç kullanamazlar. Ölümcül güç ancak kaçan şüphelinin memura veya çevredeki sivillere yönelik yakın bir ölüm veya ağır yaralanma tehdidi oluşturması durumunda kullanılabilir."
+    },
+    {
+        num: 4,
+        name: "Carroll v. United States",
+        summary: "Motorlu araçlar hızla hareket edip delilleri yok edebileceği için, memurların bir aracı aramak için ev aramalarında olduğu gibi hâkimden arama izni almasına gerek yoktur. Eğer memurun elinde Makul Şüphe (Probable Cause) varsa, aracı olay yerinde derhal arayabilir."
+    },
+    {
+        num: 5,
+        name: "Whren v. United States",
+        summary: "Bir memurun asıl amacı araçtaki uyuşturucuyu veya silahı bulmak olsa bile, araç en ufak bir trafik ihlali yaptıysa (ör: sinyal vermemek, kırık far) memurun o aracı durdurma hakkı yasaldır. Memurun içindeki asıl niyet mahkemeyi ilgilendirmez."
+    },
+    {
+        num: 6,
+        name: "Mapp v. Ohio",
+        summary: "Polisin anayasaya aykırı, yasa dışı veya arama izni olmadan elde ettiği tüm fiziksel deliller mahkemede geçersiz sayılır (Exclusionary Rule)."
+    },
+    {
+        num: 7,
+        name: "Chimel v. California",
+        summary: "Bir şüpheli evinde veya mekanında gözaltına alındığında, polis tüm evi izinsiz arayamaz. Sadece şüphelinin o an fiziksel olarak uzanabileceği, silah alabileceği veya delil karartabileceği yakın çevreyi arayabilir."
+    },
+    {
+        num: 8,
+        name: "South Dakota v. Opperman",
+        summary: "Çekici ile departman otoparkına (Impound) kaldırılacak olan her araç, memur güvenliği ve içerideki değerli eşyaların kaybolmaması adına izinsiz ve tamamen aranabilir. Bu aramada uyuşturucu veya silah bulunursa delil olarak kabul edilir."
+    },
+    {
+        num: 9,
+        name: "Steagald v. United States",
+        summary: "Elinizde A şahsı için bir tutuklama kararı (Arrest Warrant) varsa, sırf A şahsı orada diye B şahsının evine izinsiz girip arama yapamazsınız. Başkasının evine girmek için ek olarak Arama İzni (Search Warrant) gerekir."
+    },
+    {
+        num: 10,
+        name: "Pennsylvania v. Mimms",
+        summary: "Yasal bir trafik kontrolünde memur, hiçbir ek gerekçe veya şüphe göstermeksizin sürücüyü araçtan aşağı indirme hakkına sahiptir."
+    },
+    {
+        num: 11,
+        name: "Harris v. United States",
+        summary: "Bir memur, yasal olarak bulunma hakkına sahip olduğu bir yerde (ör: çevirdiği bir aracın camının önünde veya bir evin kapı eşiğinde) dururken, herhangi bir arama yapmadan çıplak gözle doğrudan gördüğü suç unsurlarına (uyuşturucu paketi, ruhsatsız silah vb.) izinsiz el koyabilir (Plain View Doctrine)."
+    },
+    {
+        num: 12,
+        name: "Florida v. J.L.",
+        summary: "Sadece isimsiz bir telefon ihbarı, polise o şahsı doğrudan üst araması yapma yetkisi vermez. İhbarın doğruluğu polis tarafından somut olarak gözlemlenmeli veya makul şüpheyle desteklenmelidir."
+    },
+    {
+        num: 13,
+        name: "Warden v. Hayden",
+        summary: "Polis, suçüstü yaptığı tehlikeli bir şüpheliyi aktif olarak kovalarken (Sıcak Takip / Hot Pursuit), şüpheli bir eve veya özel mülke kaçıp girerse; polis arama veya tutuklama izni (Warrant) beklemeksizin mülke zorla girip şüpheliyi yakalayabilir."
+    }
 ];
 
 function canTakeAttendance() {
@@ -1715,6 +1818,19 @@ function renderHandbook() {
     document.getElementById('crimesA').innerHTML = renderCrimes(CRIMES_A, '');
     document.getElementById('crimesB').innerHTML = renderCrimes(CRIMES_B, 'traffic');
     document.getElementById('crimesF').innerHTML = renderCrimes(CRIMES_F, 'federal');
+
+    const casesBox = document.getElementById('casesGrid');
+    if (casesBox) {
+        casesBox.innerHTML = CASE_LAW.map(c => `
+            <div class="crime-item" style="flex-direction:column;align-items:stretch;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <span class="crime-code" style="background:rgba(99,102,241,0.15);color:#818cf8;">${c.num}</span>
+                    <div class="title" style="font-size:1rem;color:#818cf8;">${esc(c.name)}</div>
+                </div>
+                <div class="penalty" style="line-height:1.6;">${esc(c.summary)}</div>
+            </div>
+        `).join('');
+    }
 }
 
 function switchHb(section, btn) {
@@ -1976,11 +2092,15 @@ function renderGangList() {
     box.innerHTML = pageItems.map(r => {
         const title = r.title || r.subject || ((r.firstName || '') + ' ' + (r.lastName || '')).trim() || r.factionName || 'Kayıt';
         const hasPhotos = r.photos && r.photos.length;
+        const pageCount = r.pageCount || (r.pages && r.pages.length) || (r.category === 'Şahıs Takip Raporu' ? 1 : 0);
+        const pageBadge = r.category === 'Şahıs Takip Raporu'
+            ? `<span class="badge-tag" style="background:rgba(249,115,22,0.15);color:#f97316;border-color:rgba(249,115,22,0.35);">${pageCount} sayfa</span>`
+            : `<span class="badge-tag">${esc(r.category)}</span>`;
         return `
             <div class="card report-card" onclick="openGangDetail('${r.id}')">
                 <div class="report-top">
-                    <div class="report-title">${esc(title)}${hasPhotos ? ' <i class="fa-solid fa-image" style="color:#f97316;font-size:0.85rem;"></i>' : ''}</div>
-                    <span class="badge-tag">${esc(r.category)}</span>
+                    <div class="report-title">${r.category === 'Şahıs Takip Raporu' ? '📁 ' : ''}${esc(title)}${hasPhotos ? ' <i class="fa-solid fa-image" style="color:#f97316;font-size:0.85rem;"></i>' : ''}</div>
+                    ${pageBadge}
                 </div>
                 <div class="report-meta">
                     <span><strong>Memur:</strong> ${esc(r.officer || '-')}</span>
@@ -1988,7 +2108,7 @@ function renderGangList() {
                 </div>
                 <div class="report-preview">${esc(r.preview || r.content || r.trackContent || r.factionHistory || '')}</div>
                 <div class="report-actions" onclick="event.stopPropagation()">
-                    <button class="btn btn-info btn-sm" onclick="openGangDetail('${r.id}')"><i class="fa-solid fa-eye"></i> İncele</button>
+                    <button class="btn btn-info btn-sm" onclick="openGangDetail('${r.id}')"><i class="fa-solid fa-eye"></i> ${r.category === 'Şahıs Takip Raporu' ? 'Dosyayı Aç' : 'İncele'}</button>
                     <button class="btn btn-warning btn-sm" onclick="editGangRecord('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteGangRecord('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>
                 </div>
@@ -2057,16 +2177,27 @@ function submitGangRecord() {
         const firstName = document.getElementById('gangFirstName').value.trim();
         const lastName = document.getElementById('gangLastName').value.trim();
         const trackContent = document.getElementById('gangTrackContent').value.trim();
-        if (!firstName || !trackContent) return alert('Ad ve takip içeriği zorunlu.');
+        if (!firstName || !trackContent) return alert('Ad ve 1. sayfa içeriği zorunlu.');
+        // Yeni dosya: kimlik + pages dizisi (eski sayfalar silinmez)
+        const firstPage = {
+            pageNum: 1,
+            content: trackContent,
+            photos: photos,
+            authorId: currentUserId,
+            officer: currentUserData.name + ' (' + currentUserData.rank + ')',
+            createdAt: new Date().toISOString()
+        };
         data = {
-            ...data,
-            title: firstName + ' ' + lastName,
+            category,
+            title: (firstName + ' ' + lastName).trim(),
             firstName, lastName,
             nationality: document.getElementById('gangNationality').value.trim(),
             gender: document.getElementById('gangGender').value,
             phone: document.getElementById('gangPhone').value.trim(),
             properties: document.getElementById('gangProperties').value.trim(),
-            trackContent,
+            pages: [firstPage],
+            pageCount: 1,
+            photos: photos,
             preview: trackContent
         };
     } else {
@@ -2093,8 +2224,22 @@ function submitGangRecord() {
     }
 
     if (editId) {
-        db.collection('gang').doc(editId).update(data)
-            .then(() => { showToast('Güncellendi', 'Gang kaydı kaydedildi.'); closeGangForm(); });
+        // Şahıs dosyasında kimlik güncellenirken pages silinmez
+        if (category === 'Şahıs Takip Raporu') {
+            const { pages, pageCount, preview, photos, ...identity } = data;
+            db.collection('gang').doc(editId).update({
+                title: identity.title,
+                firstName: identity.firstName,
+                lastName: identity.lastName,
+                nationality: identity.nationality,
+                gender: identity.gender,
+                phone: identity.phone,
+                properties: identity.properties
+            }).then(() => { showToast('Güncellendi', 'Kimlik bilgileri kaydedildi.'); closeGangForm(); });
+        } else {
+            db.collection('gang').doc(editId).update(data)
+                .then(() => { showToast('Güncellendi', 'Gang kaydı kaydedildi.'); closeGangForm(); });
+        }
     } else {
         db.collection('gang').add({
             ...data,
@@ -2108,19 +2253,23 @@ function submitGangRecord() {
 function openGangDetail(id) {
     const r = allGangRecords.find(x => x.id === id);
     if (!r) return;
+
+    // Şahıs Takip dosyası → özel dosya görünümü (sayfalı)
+    if (r.category === 'Şahıs Takip Raporu') {
+        openPersonCase(id);
+        return;
+    }
+
     let body = '';
     if (r.category === 'Saha Araştırma Raporu') {
         body = `Rapor Tarihi: ${r.reportDate || '-'}\nSoruşturmacılar: ${r.investigators || '-'}\nKonu: ${r.subject || '-'}\n\n${r.content || ''}`;
-    } else if (r.category === 'Şahıs Takip Raporu') {
-        body = `Ad: ${r.firstName || '-'}\nSoyad: ${r.lastName || '-'}\nUyruk: ${r.nationality || '-'}\nCinsiyet: ${r.gender || '-'}\nTelefon: ${r.phone || '-'}\nMülkler: ${r.properties || '-'}\n\nTakip İçeriği:\n${r.trackContent || ''}`;
     } else {
         body = `İsim: ${r.factionName || '-'}\nTür: ${r.factionType || '-'}\nKonum: ${r.factionLocation || '-'}\nSuçlar: ${r.factionCrimes || '-'}\nBağlantılı Şahıslar: ${r.factionMembers || '-'}\n\nSuç Bağlantısı & Geçmiş:\n${r.factionHistory || ''}`;
     }
-    // reuse detail modal
     document.getElementById('detailTitle').textContent = r.title || 'Gang Kaydı';
     document.getElementById('detailCategory').textContent = r.category || 'Gang';
     document.getElementById('detailDate').textContent = formatDate(r.createdAt);
-    document.getElementById('detailSuspects').textContent = r.firstName ? (r.firstName + ' ' + (r.lastName || '')) : (r.factionName || r.subject || '-');
+    document.getElementById('detailSuspects').textContent = r.factionName || r.subject || '-';
     document.getElementById('detailOfficer').textContent = r.officer || '-';
     document.getElementById('detailBody').textContent = body;
     const photos = r.photos || [];
@@ -2145,6 +2294,142 @@ function openGangDetail(id) {
     document.getElementById('detailActions').innerHTML = acts;
     document.getElementById('detailModal').classList.add('show');
     playClick();
+}
+
+function openPersonCase(id) {
+    const r = allGangRecords.find(x => x.id === id);
+    if (!r) return;
+    // Eski kayıtlarda pages yoksa trackContent'ten üret
+    let pages = r.pages;
+    if (!pages || !pages.length) {
+        pages = [{
+            pageNum: 1,
+            content: r.trackContent || r.preview || '',
+            photos: r.photos || [],
+            officer: r.officer || '-',
+            createdAt: r.createdAt
+        }];
+    }
+
+    document.getElementById('detailTitle').textContent = '📁 ' + (r.title || (r.firstName + ' ' + r.lastName));
+    document.getElementById('detailCategory').textContent = 'Şahıs Takip Dosyası · ' + pages.length + ' sayfa';
+    document.getElementById('detailDate').textContent = formatDate(r.createdAt);
+    document.getElementById('detailSuspects').textContent = (r.firstName || '') + ' ' + (r.lastName || '');
+    document.getElementById('detailOfficer').textContent = r.officer || '-';
+
+    // Kimlik + sayfalar HTML olarak body'ye
+    let html = `<div class="case-person-box">
+        <h4><i class="fa-solid fa-id-card"></i> Şüpheli Bilgileri</h4>
+        <div class="case-person-grid">
+            <div><span>Ad:</span> <strong>${esc(r.firstName || '-')}</strong></div>
+            <div><span>Soyad:</span> <strong>${esc(r.lastName || '-')}</strong></div>
+            <div><span>Uyruk:</span> <strong>${esc(r.nationality || '-')}</strong></div>
+            <div><span>Cinsiyet:</span> <strong>${esc(r.gender || '-')}</strong></div>
+            <div><span>Telefon:</span> <strong>${esc(r.phone || '-')}</strong></div>
+            <div><span>Mülkler:</span> <strong>${esc(r.properties || '-')}</strong></div>
+        </div>
+    </div>`;
+
+    pages.forEach((p, idx) => {
+        const num = p.pageNum || (idx + 1);
+        const dateStr = p.createdAt ? (typeof p.createdAt === 'string' ? new Date(p.createdAt).toLocaleString('tr-TR') : formatDate(p.createdAt)) : '-';
+        const pagePhotos = (p.photos || []).map(url =>
+            `<img src="${esc(url)}" alt="" style="width:100px;height:80px;object-fit:cover;border-radius:8px;margin:4px;cursor:pointer;border:1px solid var(--border);" onclick="openLightbox('${esc(url)}')" onerror="this.style.display='none'">`
+        ).join('');
+        html += `<div class="case-page">
+            <div class="page-header-row">
+                <span class="page-num">Sayfa ${num}</span>
+                <span class="page-meta"><i class="fa-regular fa-clock"></i> ${dateStr} · ${esc(p.officer || '-')}</span>
+            </div>
+            <div class="page-body">${esc(p.content || '')}</div>
+            ${pagePhotos ? `<div style="margin-top:10px;">${pagePhotos}</div>` : ''}
+        </div>`;
+    });
+
+    // Yeni sayfa ekleme formu
+    html += `<div class="card" style="margin-top:8px;border-color:rgba(249,115,22,0.35);">
+        <h4 style="margin-bottom:12px;font-size:0.95rem;color:#f97316;"><i class="fa-solid fa-plus"></i> Yeni Sayfa Ekle</h4>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:10px;">Önceki sayfalar silinmez; dosyaya yeni sayfa eklenir.</p>
+        <textarea id="newCasePageContent" class="form-control" rows="4" placeholder="Yeni sayfa içeriği..."></textarea>
+        <div style="margin-top:10px;">
+            <label style="font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Fotoğraf URL (isteğe bağlı)</label>
+            <div id="newCasePagePhotos" style="margin-top:6px;">
+                <div class="photo-row">
+                    <input type="text" class="form-control case-page-photo" placeholder="https://...">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="addCasePagePhoto()"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-success btn-sm" style="margin-top:12px;" onclick="addCasePage('${id}')">
+            <i class="fa-solid fa-file-circle-plus"></i> Sayfayı Dosyaya Ekle
+        </button>
+    </div>`;
+
+    document.getElementById('detailBody').innerHTML = html;
+    document.getElementById('detailPhotosSection').style.display = 'none';
+
+    let acts = '';
+    if (canAccessGang()) {
+        acts += `<button class="btn btn-warning btn-sm" onclick="closeDetail(); editGangRecord('${r.id}')"><i class="fa-solid fa-pen"></i> Kimlik Bilgilerini Düzenle</button>`;
+        acts += `<button class="btn btn-danger btn-sm" onclick="closeDetail(); deleteGangRecord('${r.id}')"><i class="fa-solid fa-trash"></i> Dosyayı Sil</button>`;
+    }
+    document.getElementById('detailActions').innerHTML = acts;
+    document.getElementById('detailModal').classList.add('show');
+    playClick();
+}
+
+function addCasePagePhoto() {
+    const box = document.getElementById('newCasePagePhotos');
+    if (!box) return;
+    const row = document.createElement('div');
+    row.className = 'photo-row';
+    row.innerHTML = `<input type="text" class="form-control case-page-photo" placeholder="https://...">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()"><i class="fa-solid fa-minus"></i></button>`;
+    box.appendChild(row);
+}
+
+function addCasePage(caseId) {
+    if (!canAccessGang()) return alert('Yetkiniz yok.');
+    const content = (document.getElementById('newCasePageContent')?.value || '').trim();
+    if (!content) return alert('Sayfa içeriği zorunlu.');
+    const photos = Array.from(document.querySelectorAll('.case-page-photo'))
+        .map(i => i.value.trim())
+        .filter(u => u && (u.startsWith('http://') || u.startsWith('https://')));
+
+    const r = allGangRecords.find(x => x.id === caseId);
+    if (!r) return;
+
+    let pages = r.pages ? [...r.pages] : [];
+    // eski format desteği
+    if (!pages.length && (r.trackContent || r.preview)) {
+        pages = [{
+            pageNum: 1,
+            content: r.trackContent || r.preview,
+            photos: r.photos || [],
+            officer: r.officer || '-',
+            createdAt: r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate().toISOString() : r.createdAt) : new Date().toISOString()
+        }];
+    }
+    const nextNum = pages.length + 1;
+    pages.push({
+        pageNum: nextNum,
+        content,
+        photos,
+        authorId: currentUserId,
+        officer: currentUserData.name + ' (' + currentUserData.rank + ')',
+        createdAt: new Date().toISOString()
+    });
+
+    db.collection('gang').doc(caseId).update({
+        pages,
+        pageCount: pages.length,
+        preview: content,
+        lastPageAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        showToast('Sayfa Eklendi', `Sayfa ${nextNum} dosyaya eklendi.`);
+        // liste güncellenince detayı yeniden aç
+        setTimeout(() => openPersonCase(caseId), 400);
+    }).catch(e => alert('Hata: ' + e.message));
 }
 
 function editGangRecord(id) {
