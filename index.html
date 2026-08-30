@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LSPD — Mercia Roleplay</title>
+    <title>LSPD — Advanced MDC System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -717,6 +717,8 @@
                     <ul>
                         <li>Kişi, <strong>aynı suçu</strong> üçüncü kez işlemesi durumunda <strong>1/3 oranında</strong> arttırım cezası alır.</li>
                         <li>Üçüncü suç ve sonrasında cezalar <strong>1/2 oranında</strong> arttırılır.</li>
+                        <li>Suçun <strong>kimlik gizlenerek</strong> işlenmesi (maske takmak, araç plakasını kapatmak vb.) durumunda <strong>1/3 oranında</strong> ceza arttırımı uygulanır.</li>
+                        <li><strong>Kamu güvenliğinin riske atılarak</strong> gerçekleştirilen fiillerde <strong>1/2 oranında</strong> ceza arttırımı uygulanır (meskun mahalde ateş açmak, polise direnirken kamu güvenliğine zarar vermek vb.).</li>
                     </ul>
                 </div>
             </div>
@@ -1114,14 +1116,14 @@ function closeLightbox() { document.getElementById('lightbox').classList.remove(
 const UNIT_CODES = [
     { letter: "A", name: "Adam", desc: "İki üniformalı memurdan oluşan standart iki kişilik devriye ünitesi" },
     { letter: "L", name: "Lincoln", desc: "Tek üniformalı memurdan oluşan devriye arabası (Genellikle devriye çavuşları veya rapor alan tekli memurlar)" },
-    { letter: "C", name: "Charles", desc: "Bölge karakoluna bağlı dedektif üniteleri" },
+    { letter: "W", name: "William", desc: "Dedektif ünitelerinin kullandığı ekip kodu" },
     { letter: "D", name: "David", desc: "SWAT (Özel Silahlar ve Taktikler) komandoları ve taktik üniteleri" },
     { letter: "G", name: "George", desc: "Çete mücadele ekipleri (Gang Enforcement Detail - GED)" },
-    { letter: "K", name: "King", desc: "K-9 birimi (Eğitimli köpekli polisler ve köpek taşıma araçları)" },
+    { letter: "K", name: "K9", desc: "K-9 birimi (Eğitimli köpekli polisler ve köpek taşıma araçları)" },
     { letter: "M", name: "Mary", desc: "Motorlu trafik ünitesi" },
     { letter: "N", name: "Nora", desc: "Narkotik şube ve uyuşturucu ile mücadele gizli/resmi ekipleri" },
     { letter: "S", name: "Sup", desc: "Supervisor devriyesi" },
-    { letter: "B", name: "Bird", desc: "Hava destek ünitelerin kullandığı helikopter devriyesini temsil eden kod" }
+    { letter: "AIR", name: "Air", desc: "Hava destek ünitelerinin kullandığı helikopter devriye kodu" }
 ];
 
 const RADIO_CODES = [
