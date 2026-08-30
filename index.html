@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LSPD — Advanced MDC System</title>
+    <title>LSPD — Mercia Roleplay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
     <style>
         :root, [data-theme="dark"] {
             --bg: #05070c; --bg-elevated: #0a0f18; --card: rgba(14, 20, 32, 0.9);
@@ -286,6 +287,61 @@
             color: #c4b5fd; font-weight: 600;
         }
         .btn-info { background: #0ea5e9; }
+        .notif-wrap { position: relative; }
+        .notif-btn {
+            background: var(--card); border: 1px solid var(--border); color: var(--text);
+            width: 42px; height: 42px; border-radius: 10px; cursor: pointer; font-size: 1.05rem;
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .notif-btn .badge-count {
+            position: absolute; top: -4px; right: -4px; background: var(--red); color: #fff;
+            font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center; padding: 0 4px;
+        }
+        .notif-panel {
+            position: absolute; right: 0; top: 48px; width: 340px; max-height: 400px; overflow-y: auto;
+            background: var(--modal-bg); border: 1px solid var(--border); border-radius: 12px;
+            box-shadow: var(--shadow); z-index: 200; display: none;
+        }
+        .notif-panel.show { display: block; }
+        .notif-item {
+            padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .notif-item:hover { background: var(--blue-dim); }
+        .notif-item.unread { border-left: 3px solid var(--blue); }
+        .notif-item .n-time { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
+        .calc-selected { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; min-height: 36px; }
+        .calc-chip {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+            background: var(--blue-dim); border: 1px solid rgba(0,120,255,0.3); border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600;
+        }
+        .calc-chip button { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.9rem; }
+        .calc-result {
+            background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 12px; padding: 18px; margin-top: 16px;
+        }
+        .calc-result .big { font-size: 1.6rem; font-weight: 800; color: var(--green); }
+        .upload-zone {
+            border: 2px dashed var(--border); border-radius: 10px; padding: 16px; text-align: center;
+            cursor: pointer; transition: var(--transition); margin-bottom: 10px;
+        }
+        .upload-zone:hover { border-color: var(--blue); background: var(--blue-dim); }
+        .upload-zone input { display: none; }
+        .upload-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .upload-preview img {
+            width: 72px; height: 72px; object-fit: cover; border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .profile-stat-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px;
+        }
+        .profile-stat {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center;
+        }
+        .profile-stat .n { font-size: 1.5rem; font-weight: 800; color: var(--blue); }
+        .profile-stat .l { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
         .case-page {
             border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px;
             margin-bottom: 12px; background: var(--card); border-left: 3px solid #f97316;
@@ -597,8 +653,17 @@
         <div class="nav-item" data-tab="newReport" onclick="switchTab('newReport', this)">
             <i class="fa-solid fa-plus-circle"></i> Yeni Rapor
         </div>
+        <div class="nav-item" data-tab="calculator" onclick="switchTab('calculator', this)">
+            <i class="fa-solid fa-calculator"></i> Ceza Hesaplayıcı
+        </div>
         <div class="nav-item" id="attendanceNav" style="display:none;" data-tab="attendance" onclick="switchTab('attendance', this)">
             <i class="fa-solid fa-clipboard-user"></i> Yoklama
+        </div>
+        <div class="nav-item" data-tab="profile" onclick="switchTab('profile', this)">
+            <i class="fa-solid fa-id-badge"></i> Profilim
+        </div>
+        <div class="nav-item" id="iadNav" style="display:none;" data-tab="iad" onclick="switchTab('iad', this)">
+            <i class="fa-solid fa-scale-balanced"></i> IAD
         </div>
         <div class="nav-label" id="adminLabel" style="display:none;">Yönetim</div>
         <div class="nav-item gold" id="adminNav" style="display:none;" data-tab="admin" onclick="switchTab('admin', this)">
@@ -624,6 +689,19 @@
         <div id="tab-dashboard">
             <div class="page-header">
                 <div><h2>Dashboard</h2><p class="desc">Sistem özeti ve hızlı erişim</p></div>
+                <div class="notif-wrap">
+                    <button class="notif-btn" onclick="toggleNotifPanel(event)" title="Bildirimler">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="badge-count" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <div class="notif-panel" id="notifPanel">
+                        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+                            <strong style="font-size:0.9rem;">Bildirimler</strong>
+                            <button class="btn btn-ghost btn-sm" onclick="markAllNotifsRead()">Tümünü okundu</button>
+                        </div>
+                        <div id="notifList"><div class="empty-state" style="padding:24px;"><p>Bildirim yok</p></div></div>
+                    </div>
+                </div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card">
@@ -682,6 +760,10 @@
         <div id="tab-handbook" style="display:none;">
             <div class="page-header">
                 <div><h2>El Kitabı</h2><p class="desc">Fonetik kodlar, telsiz kodları, suçlar ve cezalar</p></div>
+                <div class="search-box" style="min-width:220px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="hbSearch" class="form-control" placeholder="El kitabında ara..." oninput="searchHandbook()">
+                </div>
             </div>
             <div class="hb-tabs">
                 <button class="hb-tab active" onclick="switchHb('units', this)">Fonetik Ünite Kodları</button>
@@ -762,14 +844,20 @@
                     <textarea id="repDetails" class="form-control" rows="7" placeholder="Olayın detaylı özeti..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Fotoğraf URL'leri (isteğe bağlı)</label>
-                    <div id="repPhotoInputs">
+                    <label>Fotoğraflar</label>
+                    <div class="upload-zone" onclick="document.getElementById('repFileInput').click()">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.4rem;color:var(--blue);"></i>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--text-muted);">Dosya yükle veya sürükle</p>
+                        <input type="file" id="repFileInput" accept="image/*" multiple onchange="uploadReportPhotos(this)">
+                    </div>
+                    <div class="upload-preview" id="repUploadPreview"></div>
+                    <div id="repPhotoInputs" style="margin-top:10px;">
                         <div class="photo-row">
-                            <input type="text" class="form-control rep-photo-url" placeholder="https://imgur.com/...">
+                            <input type="text" class="form-control rep-photo-url" placeholder="veya URL: https://...">
                             <button type="button" class="btn btn-ghost btn-sm" onclick="addPhotoInput('repPhotoInputs')"><i class="fa-solid fa-plus"></i></button>
                         </div>
                     </div>
-                    <p style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;">Linkler İncele'de doğrudan fotoğraf olarak görünür.</p>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;">Yüklenen veya URL ile eklenen fotoğraflar İncele'de görünür.</p>
                 </div>
                 <div style="display:flex;gap:10px;margin-top:8px;">
                     <button class="btn btn-success" id="saveReportBtn" onclick="submitReport()">
@@ -984,6 +1072,104 @@
             <div id="attHistory"></div>
         </div>
 
+        <!-- CEZA HESAPLAYICI -->
+        <div id="tab-calculator" style="display:none;">
+            <div class="page-header">
+                <div><h2>Ceza Hesaplayıcı</h2><p class="desc">Suçları seç, indirim/artırım uygula</p></div>
+            </div>
+            <div class="card">
+                <div class="form-group">
+                    <label>Suç Ekle</label>
+                    <select id="calcCrimeSelect" class="form-control" onchange="addCalcCrime()">
+                        <option value="">— Suç seç —</option>
+                    </select>
+                </div>
+                <div class="calc-selected" id="calcSelected"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="form-group">
+                        <label>Ceza İndirimi</label>
+                        <select id="calcReduce" class="form-control" onchange="runCalc()">
+                            <option value="0">Yok</option>
+                            <option value="0.5">İş birliği (1/2)</option>
+                            <option value="0.666">Pişmanlık (2/3)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ceza Arttırımı</label>
+                        <select id="calcIncrease" class="form-control" onchange="runCalc()">
+                            <option value="0">Yok</option>
+                            <option value="0.333">Tekrar / Kimlik gizleme (1/3)</option>
+                            <option value="0.5">Kamu güvenliği riski / 3+ tekrar (1/2)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="calcNoReduce" onchange="runCalc()"> Cinayet vb. — indirim uygulanmaz</label>
+                </div>
+                <div class="calc-result" id="calcResult">
+                    <div style="color:var(--text-muted);font-size:0.9rem;">Suç seçerek hesaplamaya başla</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFİL -->
+        <div id="tab-profile" style="display:none;">
+            <div class="page-header">
+                <div><h2>Profilim</h2><p class="desc">Kişisel özet ve geçmiş</p></div>
+            </div>
+            <div class="card" style="display:flex;gap:20px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+                <img id="profileBigAvatar" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);" alt="">
+                <div>
+                    <h3 id="profileName" style="font-size:1.25rem;"></h3>
+                    <p id="profileRankBadge" style="margin-top:4px;"></p>
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-top:6px;" id="profileEmail"></p>
+                </div>
+            </div>
+            <div class="profile-stat-grid" id="profileStats"></div>
+            <h3 style="margin-bottom:12px;font-size:1.05rem;">Raporlarım</h3>
+            <div id="profileReports"></div>
+        </div>
+
+        <!-- IAD -->
+        <div id="tab-iad" style="display:none;">
+            <div class="page-header">
+                <div>
+                    <h2>IAD — İç Soruşturma</h2>
+                    <p class="desc">Sergeant ve üzeri erişebilir</p>
+                </div>
+                <button class="btn btn-success btn-sm" onclick="openIadForm()">
+                    <i class="fa-solid fa-plus"></i> Soruşturma Aç
+                </button>
+            </div>
+            <div id="iadList"></div>
+            <div class="card" id="iadFormCard" style="display:none;margin-top:20px;">
+                <h3 style="margin-bottom:16px;">Yeni IAD Soruşturması</h3>
+                <input type="hidden" id="iadEditId" value="">
+                <div class="form-group">
+                    <label>Soruşturma Konusu / Memur</label>
+                    <input type="text" id="iadSubject" class="form-control" placeholder="İsim veya konu">
+                </div>
+                <div class="form-group">
+                    <label>Durum</label>
+                    <select id="iadStatus" class="form-control">
+                        <option value="Açık">Açık</option>
+                        <option value="İnceleniyor">İnceleniyor</option>
+                        <option value="Kapalı">Kapalı</option>
+                        <option value="İhlal Tespit">İhlal Tespit</option>
+                        <option value="İhlal Yok">İhlal Yok</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Detaylar</label>
+                    <textarea id="iadDetails" class="form-control" rows="5" placeholder="Olay özeti, tanıklar..."></textarea>
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-success" onclick="submitIad()"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+                    <button class="btn btn-ghost" onclick="document.getElementById('iadFormCard').style.display='none'">İptal</button>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-admin" style="display:none;">
             <div class="page-header">
                 <div><h2>Bekleyen Başvurular</h2><p class="desc">Onay bekleyen memur kayıtları</p></div>
@@ -1037,6 +1223,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 let isSignUp = false;
 let currentUserData = null;
@@ -1085,6 +1272,16 @@ function canAccessGang() {
         detectiveRanks.includes(currentUserData.rank) ||
         authorizedRanks.includes(currentUserData.rank) ||
         (currentUserData.rank && currentUserData.rank.includes('Sergeant'))
+    );
+}
+function canAccessIad() {
+    // Sergeant+ ve admin
+    return currentUserData && (
+        currentUserData.isAdmin ||
+        (currentUserData.rank && (
+            currentUserData.rank.includes('Sergeant') ||
+            currentUserData.rank.includes('Lieutenant')
+        ))
     );
 }
 let allGangRecords = [];
@@ -1409,9 +1606,13 @@ auth.onAuthStateChanged(user => {
                 document.getElementById('gangNav').style.display = 'flex';
                 loadGangRecords();
             }
+            if (canAccessIad()) {
+                document.getElementById('iadNav').style.display = 'flex';
+            }
             loadReports();
             loadOfficers();
             renderHandbook();
+            loadNotifications();
         });
     } else {
         document.getElementById('authScreen').style.display = 'flex';
@@ -1423,10 +1624,13 @@ function logout() { auth.signOut(); }
 
 function switchTab(tab, el) {
     if (tab !== 'newReport') resetReportForm();
-    ['dashboard','reports','officers','handbook','detective','gang','newReport','attendance','admin'].forEach(t => {
+    ['dashboard','reports','officers','handbook','detective','gang','newReport','calculator','profile','iad','attendance','admin'].forEach(t => {
         const e = document.getElementById('tab-' + t);
         if (e) e.style.display = 'none';
     });
+    if (tab === 'calculator') initCalculator();
+    if (tab === 'profile') loadProfile();
+    if (tab === 'iad') loadIad();
     document.getElementById('tab-' + tab).style.display = 'block';
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
@@ -2482,6 +2686,326 @@ function deleteGangRecord(id) {
     openConfirm('Kayıt Silinsin mi?', 'Bu işlem geri alınamaz.', () => {
         db.collection('gang').doc(id).delete().then(() => showToast('Silindi', 'Gang kaydı kaldırıldı.'));
     });
+}
+
+/* ========== FOTO YÜKLEME ========== */
+async function uploadReportPhotos(input) {
+    if (!input.files || !input.files.length) return;
+    const preview = document.getElementById('repUploadPreview');
+    showToast('Yükleniyor', input.files.length + ' dosya yükleniyor...');
+    for (const file of input.files) {
+        if (!file.type.startsWith('image/')) continue;
+        try {
+            const path = 'reports/' + currentUserId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+            const ref = storage.ref().child(path);
+            await ref.put(file);
+            const url = await ref.getDownloadURL();
+            // URL input ekle
+            const box = document.getElementById('repPhotoInputs');
+            const row = document.createElement('div');
+            row.className = 'photo-row';
+            row.innerHTML = `<input type="text" class="form-control rep-photo-url" value="${esc(url)}">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()"><i class="fa-solid fa-minus"></i></button>`;
+            box.appendChild(row);
+            if (preview) {
+                const img = document.createElement('img');
+                img.src = url;
+                img.onclick = () => openLightbox(url);
+                preview.appendChild(img);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Yükleme hatası: ' + e.message + '\n(Firebase Storage kurallarını kontrol et)');
+        }
+    }
+    input.value = '';
+    showToast('Tamam', 'Fotoğraflar yüklendi');
+}
+
+/* ========== CEZA HESAPLAYICI ========== */
+let calcList = [];
+// Yaklaşık gün/para değerleri (aralıkların ortası)
+const CALC_VALUES = {
+    'A1': { days: 0, fine: 5000 }, 'A2': { days: 38, fine: 4000 }, 'A3': { days: 45, fine: 0 },
+    'A4': { days: 100, fine: 0 }, 'A5': { days: 600, fine: 0, noReduce: true }, 'A6': { days: 120, fine: 0 },
+    'A7': { days: 105, fine: 0 }, 'A8': { days: 100, fine: 0 }, 'A9': { days: 50, fine: 0 },
+    'A10': { days: 60, fine: 0 }, 'A11': { days: 250, fine: 0 }, 'A12': { days: 55, fine: 0 },
+    'A13': { days: 80, fine: 0 }, 'A14': { days: 55, fine: 0 }, 'A15': { days: 120, fine: 0 },
+    'A16': { days: 40, fine: 0 },
+    'B1': { days: 0, fine: 2000 }, 'B2': { days: 0, fine: 4000 }, 'B3': { days: 0, fine: 3500 },
+    'B4': { days: 0, fine: 8000 }, 'B5': { days: 0, fine: 1000 }, 'B6': { days: 0, fine: 10000 },
+    'B7': { days: 0, fine: 1000 }, 'B8': { days: 0, fine: 7000 }, 'B9': { days: 0, fine: 2000 },
+    'C1': { days: 120, fine: 0 }, 'C2': { days: 400, fine: 0 }, 'C3': { days: 170, fine: 0 },
+    'C4': { days: 500, fine: 0 }, 'C5': { days: 0, fine: 0 }, 'C6': { days: 225, fine: 0 },
+    'C7': { days: 225, fine: 0 }
+};
+function initCalculator() {
+    const sel = document.getElementById('calcCrimeSelect');
+    if (!sel || sel.options.length > 1) return;
+    const all = [...CRIMES_A, ...CRIMES_B, ...CRIMES_F];
+    all.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.code;
+        o.textContent = c.code + ' — ' + c.title;
+        sel.appendChild(o);
+    });
+}
+function addCalcCrime() {
+    const sel = document.getElementById('calcCrimeSelect');
+    const code = sel.value;
+    if (!code) return;
+    const all = [...CRIMES_A, ...CRIMES_B, ...CRIMES_F];
+    const crime = all.find(c => c.code === code);
+    if (!crime) return;
+    calcList.push({ code, title: crime.title, ...(CALC_VALUES[code] || { days: 0, fine: 0 }) });
+    sel.value = '';
+    renderCalcList();
+    runCalc();
+}
+function removeCalcCrime(i) {
+    calcList.splice(i, 1);
+    renderCalcList();
+    runCalc();
+}
+function renderCalcList() {
+    document.getElementById('calcSelected').innerHTML = calcList.map((c, i) =>
+        `<span class="calc-chip">${c.code} ${esc(c.title)} <button type="button" onclick="removeCalcCrime(${i})">×</button></span>`
+    ).join('') || '<span style="color:var(--text-dim);font-size:0.85rem;">Henüz suç eklenmedi</span>';
+}
+function runCalc() {
+    if (!calcList.length) {
+        document.getElementById('calcResult').innerHTML = '<div style="color:var(--text-muted);font-size:0.9rem;">Suç seçerek hesaplamaya başla</div>';
+        return;
+    }
+    let days = calcList.reduce((s, c) => s + (c.days || 0), 0);
+    let fine = calcList.reduce((s, c) => s + (c.fine || 0), 0);
+    const noReduce = document.getElementById('calcNoReduce').checked || calcList.some(c => c.noReduce);
+    let reduce = parseFloat(document.getElementById('calcReduce').value) || 0;
+    let increase = parseFloat(document.getElementById('calcIncrease').value) || 0;
+    if (noReduce) reduce = 0;
+    // önce arttırım, sonra indirim
+    days = Math.round(days * (1 + increase));
+    fine = Math.round(fine * (1 + increase));
+    days = Math.round(days * (1 - reduce));
+    fine = Math.round(fine * (1 - reduce));
+    document.getElementById('calcResult').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div><div style="font-size:0.75rem;color:var(--text-muted);">TOPLAM HAPİS</div><div class="big">${days} gün</div></div>
+            <div><div style="font-size:0.75rem;color:var(--text-muted);">TOPLAM PARA CEZASI</div><div class="big">${fine.toLocaleString('tr-TR')} $</div></div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:12px;">
+            ${calcList.length} suç · Arttırım: %${Math.round(increase * 100)} · İndirim: %${Math.round(reduce * 100)}
+            ${noReduce ? ' · İndirim kapalı' : ''}
+            <br>Not: Aralıklı cezalarda ortalama değer kullanılır; saha kararı memura aittir.
+        </p>`;
+}
+
+/* ========== BİLDİRİM MERKEZİ ========== */
+let allNotifs = [];
+function loadNotifications() {
+    if (!currentUserId) return;
+    db.collection('notifications').where('userId', '==', currentUserId)
+        .orderBy('createdAt', 'desc').limit(30)
+        .onSnapshot(snap => {
+            allNotifs = [];
+            snap.forEach(d => allNotifs.push({ id: d.id, ...d.data() }));
+            renderNotifs();
+        }, err => {
+            // index yoksa basit sorgu
+            console.warn('notif index:', err);
+            db.collection('notifications').where('userId', '==', currentUserId).limit(30)
+                .onSnapshot(snap => {
+                    allNotifs = [];
+                    snap.forEach(d => allNotifs.push({ id: d.id, ...d.data() }));
+                    allNotifs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                    renderNotifs();
+                });
+        });
+}
+function renderNotifs() {
+    const unread = allNotifs.filter(n => !n.read).length;
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+        badge.style.display = unread ? 'flex' : 'none';
+        badge.textContent = unread > 9 ? '9+' : unread;
+    }
+    const list = document.getElementById('notifList');
+    if (!list) return;
+    if (!allNotifs.length) {
+        list.innerHTML = '<div class="empty-state" style="padding:24px;"><p>Bildirim yok</p></div>';
+        return;
+    }
+    list.innerHTML = allNotifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}" onclick="openNotif('${n.id}')">
+            <div>${esc(n.message || n.title || 'Bildirim')}</div>
+            <div class="n-time">${formatDate(n.createdAt)}</div>
+        </div>
+    `).join('');
+}
+function toggleNotifPanel(e) {
+    e.stopPropagation();
+    document.getElementById('notifPanel').classList.toggle('show');
+}
+document.addEventListener('click', () => {
+    const p = document.getElementById('notifPanel');
+    if (p) p.classList.remove('show');
+});
+function openNotif(id) {
+    const n = allNotifs.find(x => x.id === id);
+    if (n && !n.read) db.collection('notifications').doc(id).update({ read: true });
+}
+function markAllNotifsRead() {
+    allNotifs.filter(n => !n.read).forEach(n => {
+        db.collection('notifications').doc(n.id).update({ read: true });
+    });
+}
+function pushNotif(userId, message, title) {
+    if (!userId) return;
+    db.collection('notifications').add({
+        userId, message, title: title || 'LSPD',
+        read: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+/* ========== PROFİL ========== */
+function loadProfile() {
+    if (!currentUserData) return;
+    document.getElementById('profileBigAvatar').src = currentUserData.avatar || LOGO;
+    document.getElementById('profileName').textContent = currentUserData.name + ' (#' + (currentUserData.badge || '') + ')';
+    document.getElementById('profileRankBadge').innerHTML =
+        `<span class="badge-tag ${rankClass(currentUserData.rank)}">${esc(currentUserData.rank)}</span>`;
+    document.getElementById('profileEmail').textContent = currentUserData.email || '';
+    const myReports = allReports.filter(r => r.authorId === currentUserId);
+    document.getElementById('profileStats').innerHTML = `
+        <div class="profile-stat"><div class="n">${myReports.length}</div><div class="l">Raporlarım</div></div>
+        <div class="profile-stat"><div class="n">${allOfficers.length}</div><div class="l">Aktif Memur</div></div>
+        <div class="profile-stat"><div class="n">${allReports.length}</div><div class="l">Toplam Rapor</div></div>
+    `;
+    const box = document.getElementById('profileReports');
+    if (!myReports.length) {
+        box.innerHTML = '<div class="card empty-state"><p>Henüz raporun yok.</p></div>';
+        return;
+    }
+    box.innerHTML = myReports.slice(0, 10).map(r => `
+        <div class="card report-card" onclick="openDetail('${r.id}')" style="margin-bottom:10px;">
+            <div class="report-top">
+                <div class="report-title">${esc(r.title)}</div>
+                <span class="badge-tag">${esc(r.category || '')}</span>
+            </div>
+            <div class="report-meta"><span class="report-date"><i class="fa-regular fa-clock"></i> ${formatDate(r.createdAt)}</span></div>
+        </div>
+    `).join('');
+}
+
+/* ========== IAD ========== */
+let allIad = [];
+function loadIad() {
+    if (!canAccessIad()) return;
+    db.collection('iad').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        allIad = [];
+        snap.forEach(d => allIad.push({ id: d.id, ...d.data() }));
+        renderIad();
+    }, err => console.warn('iad:', err));
+}
+function renderIad() {
+    const box = document.getElementById('iadList');
+    if (!box) return;
+    if (!allIad.length) {
+        box.innerHTML = '<div class="card empty-state"><i class="fa-solid fa-scale-balanced"></i><p>Açık soruşturma yok.</p></div>';
+        return;
+    }
+    box.innerHTML = allIad.map(r => `
+        <div class="card report-card" style="margin-bottom:10px;">
+            <div class="report-top">
+                <div class="report-title">${esc(r.subject)}</div>
+                <span class="badge-tag">${esc(r.status || 'Açık')}</span>
+            </div>
+            <div class="report-meta">
+                <span><strong>Açan:</strong> ${esc(r.officer || '-')}</span>
+                <span class="report-date"><i class="fa-regular fa-clock"></i> ${formatDate(r.createdAt)}</span>
+            </div>
+            <div class="report-preview">${esc(r.details || '')}</div>
+            <div class="report-actions" onclick="event.stopPropagation()">
+                <button class="btn btn-warning btn-sm" onclick="editIad('${r.id}')"><i class="fa-solid fa-pen"></i> Düzenle</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteIad('${r.id}')"><i class="fa-solid fa-trash"></i> Sil</button>
+            </div>
+        </div>
+    `).join('');
+}
+function openIadForm() {
+    document.getElementById('iadFormCard').style.display = 'block';
+    document.getElementById('iadEditId').value = '';
+    document.getElementById('iadSubject').value = '';
+    document.getElementById('iadStatus').value = 'Açık';
+    document.getElementById('iadDetails').value = '';
+}
+function editIad(id) {
+    const r = allIad.find(x => x.id === id);
+    if (!r) return;
+    openIadForm();
+    document.getElementById('iadEditId').value = r.id;
+    document.getElementById('iadSubject').value = r.subject || '';
+    document.getElementById('iadStatus').value = r.status || 'Açık';
+    document.getElementById('iadDetails').value = r.details || '';
+}
+function submitIad() {
+    if (!canAccessIad()) return alert('Yetkiniz yok.');
+    const editId = document.getElementById('iadEditId').value;
+    const subject = document.getElementById('iadSubject').value.trim();
+    const status = document.getElementById('iadStatus').value;
+    const details = document.getElementById('iadDetails').value.trim();
+    if (!subject) return alert('Konu zorunlu.');
+    const data = { subject, status, details };
+    if (editId) {
+        db.collection('iad').doc(editId).update(data)
+            .then(() => { showToast('Güncellendi', 'IAD kaydı güncellendi.'); document.getElementById('iadFormCard').style.display = 'none'; });
+    } else {
+        db.collection('iad').add({
+            ...data,
+            authorId: currentUserId,
+            officer: currentUserData.name + ' (' + currentUserData.rank + ')',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => { showToast('Açıldı', 'IAD soruşturması açıldı.'); document.getElementById('iadFormCard').style.display = 'none'; });
+    }
+}
+function deleteIad(id) {
+    openConfirm('Soruşturma silinsin mi?', 'Bu işlem geri alınamaz.', () => {
+        db.collection('iad').doc(id).delete().then(() => showToast('Silindi', 'IAD kaydı kaldırıldı.'));
+    });
+}
+
+/* ========== EL KİTABI ARAMA ========== */
+function searchHandbook() {
+    const q = (document.getElementById('hbSearch')?.value || '').toLowerCase().trim();
+    // Tüm handbook item'larında filtrele
+    document.querySelectorAll('#tab-handbook .code-item, #tab-handbook .crime-item, #tab-handbook .rule-box').forEach(el => {
+        const text = el.textContent.toLowerCase();
+        el.style.display = (!q || text.includes(q)) ? '' : 'none';
+    });
+    // Eşleşme varsa ilgili sekmeyi otomatik gösterme: tüm sekmeleri tara
+    if (q) {
+        ['units', 'radio', 'crimes', 'rules', 'cases'].forEach(sec => {
+            const section = document.getElementById('hb-' + sec);
+            if (!section) return;
+            const visible = Array.from(section.querySelectorAll('.code-item, .crime-item, .rule-box'))
+                .some(el => el.style.display !== 'none');
+            // arama varken tüm sekmeleri göster (filtreli)
+            section.classList.add('active');
+            section.style.display = visible || sec === 'rules' ? 'block' : 'none';
+        });
+    } else {
+        // arama temizlenince normal sekmeye dön
+        document.querySelectorAll('.hb-section').forEach(s => {
+            s.classList.remove('active');
+            s.style.display = '';
+        });
+        const activeTab = document.querySelector('.hb-tab.active');
+        if (activeTab) {
+            const sec = activeTab.getAttribute('onclick')?.match(/switchHb\('(\w+)'/)?.[1] || 'units';
+            document.getElementById('hb-' + sec)?.classList.add('active');
+        }
+    }
 }
 </script>
 </body>
