@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LSPD — Mercia Roleplay</title>
+    <title>LSPD — Advanced MDC System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -1052,7 +1052,7 @@
             <div class="page-header">
                 <div>
                     <h2>Yoklama Sistemi</h2>
-                    <p class="desc">Police Officer III+1 ve üzeri rütbeler yoklama alabilir</p>
+                    <p class="desc">Police Officer III ve üzeri rütbeler yoklama alabilir</p>
                 </div>
             </div>
             <div class="card" id="attTakePanel">
@@ -1256,7 +1256,8 @@ function rankSortIndex(rank) {
 }
 const authorizedRanks = ["Police Lieutenant II", "Police Lieutenant I", "Police Sergeant II"];
 const attendanceRanks = [
-    "Police Officer III+1", "Detective I", "Detective II",
+    "Police Officer III", "Police Officer III+1",
+    "Detective I", "Detective II",
     "Police Sergeant I", "Police Sergeant II",
     "Police Lieutenant I", "Police Lieutenant II"
 ];
@@ -1322,34 +1323,105 @@ function openLightbox(src) {
 function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
 
 const UNIT_CODES = [
-    { letter: "A", name: "Adam", desc: "İki üniformalı memurdan oluşan standart iki kişilik devriye ünitesi" },
-    { letter: "L", name: "Lincoln", desc: "Tek üniformalı memurdan oluşan devriye arabası (Genellikle devriye çavuşları veya rapor alan tekli memurlar)" },
-    { letter: "W", name: "William", desc: "Dedektif ünitelerinin kullandığı ekip kodu" },
-    { letter: "D", name: "David", desc: "SWAT (Özel Silahlar ve Taktikler) komandoları ve taktik üniteleri" },
-    { letter: "G", name: "George", desc: "Çete mücadele ekipleri (Gang Enforcement Detail - GED)" },
-    { letter: "K", name: "K9", desc: "K-9 birimi (Eğitimli köpekli polisler ve köpek taşıma araçları)" },
-    { letter: "M", name: "Mary", desc: "Motorlu trafik ünitesi" },
-    { letter: "N", name: "Nora", desc: "Narkotik şube ve uyuşturucu ile mücadele gizli/resmi ekipleri" },
-    { letter: "S", name: "Sup", desc: "Supervisor devriyesi" },
-    { letter: "AIR", name: "Air", desc: "Hava destek ünitelerinin kullandığı helikopter devriye kodu" }
+    { letter: "A", name: "Adam", desc: "Standart iki kişilik üniformalı devriye (LAPD: 2-officer unit)" },
+    { letter: "L", name: "Lincoln", desc: "Tek kişilik üniformalı devriye / rapor alan solo ünite" },
+    { letter: "W", name: "William", desc: "Dedektif üniteleri (Detective Bureau / follow-up)" },
+    { letter: "X", name: "X-ray", desc: "Metro Division — özel operasyon, yoğun olay ve taktik destek" },
+    { letter: "M", name: "Mary", desc: "Motor / trafik motorlu ünite (Motorcycle traffic)" },
+    { letter: "T", name: "Tom", desc: "Trafik ünitesi — kaza, ihlal, yol kontrolü (Traffic Division)" },
+    { letter: "AIR", name: "Air", desc: "Hava destek — helikopter (Air Support Division)" },
+    { letter: "K", name: "K9", desc: "K-9 birimi — eğitimli köpekli arama / takip" },
+    { letter: "G", name: "George", desc: "GND / GED — çete mücadele ekipleri (Gang Enforcement)" },
+    { letter: "N", name: "Nora", desc: "Narkotik şube — uyuşturucu soruşturma ekipleri" },
+    { letter: "D", name: "David", desc: "SWAT / Metro taktik (özel silah ve taktikler)" },
+    { letter: "S", name: "Sam", desc: "Supervisor / serjant devriyesi (saha amiri)" },
+    { letter: "E", name: "Edward", desc: "Çekici / Impound — araç çekim ve otopark işlemleri" },
+    { letter: "I", name: "Ida", desc: "İçişleri / IAD bağlantılı saha veya idari ünite kodu" },
+    { letter: "B", name: "Boy", desc: "Bisiklet / park-yaya yoğun bölge devriyesi (Bike unit)" },
+    { letter: "C", name: "Charles", desc: "Community / mahalle irtibat veya özel detay (isteğe bağlı)" },
+    { letter: "F", name: "Frank", desc: "Foot beat — yaya devriye" },
+    { letter: "R", name: "Robert", desc: "Rapor yazım / desk veya istasyon içi ünite" },
+    { letter: "V", name: "Victor", desc: "Van / ekip taşıma veya özel donanımlı araç" },
+    { letter: "H", name: "Henry", desc: "Highway / otoyol trafik (gerekirse)" }
 ];
 
 const RADIO_CODES = [
-    { code: "Code 0", desc: "Memur tehlikede — çağrıya yönel!" },
-    { code: "Code 2", desc: "Çağrıya yöneliyorum, sirenlerim kapalı." },
-    { code: "Code 3", desc: "Çağrıya yöneliyorum, sirenlerim açık." },
-    { code: "Code 4", desc: "Olay kontrol altında, daha fazla desteğe ihtiyacım yok." },
-    { code: "Code 5", desc: "Bölgede gizli soruşturma yürütülüyor, varlığınızı hissettirmeyin." },
-    { code: "Code 6", desc: "Olay yerine ulaştım, araç dışındayım." },
-    { code: "Code 6A", desc: "Olay yerinde araç dışarısındayım, destek gerekiyor." },
-    { code: "Code 6G", desc: "Olay yerinde araç dışındayım, çeteleşme vakası." },
-    { code: "Code 6C", desc: "Olay yerinde araç dışındayım, şüpheli ile kontağım var." },
-    { code: "Code 7", desc: "Çağrılara kapalıyım (kısa süreli)" },
-    { code: "Code 10-07", desc: "Çağrılara kapalıyım (uzun süreli)" },
-    { code: "Code 10-08", desc: "Çağrılara müsait." },
-    { code: "Code 10-20", desc: "Konum bildirimi." },
-    { code: "Code 10-57V", desc: "Araç kovalamacası" },
-    { code: "Code 10-57F", desc: "Yayan kovalamaca." }
+    /* —— Durum / yanıt kodları (LAPD tarzı) —— */
+    { code: "Code 1", desc: "Rutin — aciliyet yok, normal sürüş." },
+    { code: "Code 2", desc: "Acil — siren/ışık kapalı veya sınırlı kullanım; hızlı git." },
+    { code: "Code 3", desc: "Acil — siren ve ışıklar açık; öncelikli müdahale." },
+    { code: "Code 4", desc: "Olay kontrol altında; ek birime gerek yok." },
+    { code: "Code 4-Adam", desc: "Olay kontrol altında, şüpheli gözaltında." },
+    { code: "Code 5", desc: "Stakeout / gizli gözlem — bölgede gereksiz dolaşma." },
+    { code: "Code 6", desc: "Olay yerindeyim, araç dışındayım." },
+    { code: "Code 6-Adam", desc: "Olay yerindeyim, destek istiyorum." },
+    { code: "Code 6-Charles", desc: "Olay yerindeyim, şüpheli ile temas / çatışma riski." },
+    { code: "Code 6-George", desc: "Olay yerindeyim, çete / GND ilgili vaka." },
+    { code: "Code 7", desc: "Yemek / kısa mola (out of service — meal)." },
+    { code: "Code 8", desc: "Yangın ihbarı / itfaiye ile koordinasyon." },
+    { code: "Code 9", desc: "Trafik durdurma (traffic stop)." },
+    { code: "Code 10", desc: "Bomb / şüpheli paket — uzak tut, uzman bekle." },
+    { code: "Code 20", desc: "Basın / medya olay yerinde." },
+    { code: "Code 30", desc: "Memur yardıma ihtiyaç duyuyor (officer needs help — genel)." },
+    { code: "Code 30-George", desc: "Memur ateş altında / silahlı saldırı." },
+    { code: "Code 99", desc: "Acil tüm birimler — memur tehlikede (officer down / extreme)." },
+    /* —— 10 kodları (çeşitlendirilmiş, RP uyumlu) —— */
+    { code: "10-1", desc: "Telsiz alımı zayıf / sinyal kötü." },
+    { code: "10-2", desc: "Telsiz alımı iyi." },
+    { code: "10-3", desc: "Telsizi kes / kanalı boşalt." },
+    { code: "10-4", desc: "Anlaşıldı / tamam." },
+    { code: "10-5", desc: "Mesajı ilet (relay)." },
+    { code: "10-6", desc: "Meşgulüm — meşgul kalma süresince çağrı verme." },
+    { code: "10-7", desc: "Çağrı dışı (out of service)." },
+    { code: "10-8", desc: "Çağrıya müsait (in service)." },
+    { code: "10-9", desc: "Tekrar et / mesajı yenile." },
+    { code: "10-10", desc: "Savaş / kavga devam ediyor." },
+    { code: "10-15", desc: "Şüpheli gözaltında / transport." },
+    { code: "10-16", desc: "Pickup / alınacak mahkum veya eşya." },
+    { code: "10-17", desc: "Gerekli materyal / rapor getir." },
+    { code: "10-19", desc: "Karşılığa / istasyona dön." },
+    { code: "10-20", desc: "Konumun nedir? (location)" },
+    { code: "10-21", desc: "Telefon ile ara." },
+    { code: "10-22", desc: "Son emri iptal et / yoksay." },
+    { code: "10-23", desc: "Olay yerinde bekle." },
+    { code: "10-27", desc: "Ehliyet / kimlik sorgusu." },
+    { code: "10-28", desc: "Plaka sorgusu (vehicle registration)." },
+    { code: "10-29", desc: "Sicil / aranan kontrolü (check for wants)." },
+    { code: "10-32", desc: "Silahlı kişi ihbarı." },
+    { code: "10-33", desc: "Acil — telsizde sessizlik / emergency traffic." },
+    { code: "10-35", desc: "Devriye / gizli alarm veya hassas bilgi." },
+    { code: "10-36", desc: "Saat bilgisi." },
+    { code: "10-37", desc: "Şüpheli araç / operatör." },
+    { code: "10-50", desc: "Trafik kazası." },
+    { code: "10-51", desc: "Çekici talep et (tow requested)." },
+    { code: "10-52", desc: "Ambulans talep et." },
+    { code: "10-53", desc: "Yol kapatıldı / trafik bloke." },
+    { code: "10-54", desc: "Mümkün ceset / şüpheli ölüm ihbarı." },
+    { code: "10-55", desc: "Alkollü sürücü (DUI)." },
+    { code: "10-56", desc: "İntihar / kendine zarar ihbarı — dikkatli yaklaş." },
+    { code: "10-57", desc: "Yayan kovalamaca (foot pursuit)." },
+    { code: "10-57V", desc: "Araç kovalamacası (vehicle pursuit)." },
+    { code: "10-66", desc: "Şüpheli kişi kontrolü." },
+    { code: "10-70", desc: "Yangın ihbarı." },
+    { code: "10-71", desc: "Ateş sesi ihbarı." },
+    { code: "10-80", desc: "Kovalamaca devam ediyor (pursuit in progress)." },
+    { code: "10-97", desc: "Olay yerine vardım (on scene)." },
+    { code: "10-98", desc: "Son görev tamamlandı." },
+    /* —— Olay kodları (kısa) —— */
+    { code: "187", desc: "Cinayet (homicide)." },
+    { code: "211", desc: "Soygun (robbery)." },
+    { code: "415", desc: "Kamu düzeni bozma / kavga (disturbance)." },
+    { code: "459", desc: "Hırsızlık / ev soygunu (burglary)." },
+    { code: "484", desc: "Hırsızlık / petty theft." },
+    { code: "502", desc: "Alkollü araç kullanma." },
+    { code: "503", desc: "Araç hırsızlığı." },
+    { code: "586", desc: "Yasadışı park." },
+    { code: "901", desc: "Ambulans / yaralı çağrısı." },
+    { code: "902", desc: "Kaza — yaralı var/yok ayrımı saha notu ile." },
+    { code: "904", desc: "Yangın." },
+    { code: "920", desc: "Kayıp kişi." },
+    { code: "998", desc: "Memur ateş etti / officer involved shooting." },
+    { code: "999", desc: "Memur yardıma ihtiyacı var — acil tüm birimler." }
 ];
 
 const CRIMES_A = [
