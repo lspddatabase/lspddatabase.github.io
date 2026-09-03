@@ -3377,16 +3377,38 @@ function renderFtpEval(uid, data) {
     const box = document.getElementById('ftpEvalView');
     const t = allOfficers.find(u => u.id === uid) || ftpSelectedTrainee || {};
     const canEdit = isFtoOfficer();
+    const history = Array.isArray(data.history) ? data.history.slice().reverse() : [];
     let html = `
         <div class="card" style="margin-bottom:16px;">
             <h3 style="margin-bottom:6px;">${esc(t.name || 'Öğrenci')} <span style="color:var(--text-dim);font-weight:400;">#${esc(t.badge || '')}</span></h3>
-            <p style="font-size:0.85rem;color:var(--text-muted);">${esc(t.rank || '')} · FTP değerlendirme paneli</p>
+            <p style="font-size:0.85rem;color:var(--text-muted);">${esc(t.rank || '')} · ${esc(t.division || '')}</p>
+            ${data.lastFtoName ? `<p style="font-size:0.8rem;color:#22d3ee;margin-top:8px;">Son kayıt: <strong>${esc(data.lastFtoName)}</strong></p>` : ''}
             ${canEdit ? '' : '<p style="font-size:0.8rem;color:#fbbf24;margin-top:8px;">Salt okunur — FTO değilse düzenleyemezsin.</p>'}
         </div>`;
+
+    if (history.length) {
+        html += `<div class="card" style="margin-bottom:16px;">
+            <h4 style="margin-bottom:10px;font-size:0.95rem;">Değerlendirme geçmişi</h4>
+            <div style="max-height:180px;overflow-y:auto;">`;
+        history.forEach(h => {
+            html += `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">
+                <strong style="color:#22d3ee;">Aşama ${esc(String(h.stageId))}</strong> —
+                ${esc(h.ftoName || '?')} · ${esc(h.status || '')}
+                <span style="color:var(--text-dim);"> · ${h.at ? formatFtpDate(h.at) : ''}</span>
+                ${h.note ? `<div style="color:var(--text-muted);margin-top:2px;">${esc(h.note)}</div>` : ''}
+            </div>`;
+        });
+        html += `</div></div>`;
+    }
+
     FTP_STAGES.forEach(stage => {
         const st = (data.stages && data.stages[stage.id]) || { modules: {}, status: 'devam' };
-        html += `<div class="card" style="margin-bottom:16px;">
+        const byLine = st.evaluatedBy
+            ? `<p style="font-size:0.78rem;color:#22d3ee;margin-bottom:10px;">Bu aşamayı dolduran: <strong>${esc(st.evaluatedBy)}</strong>${st.evaluatedAt ? ' · ' + formatFtpDate(st.evaluatedAt) : ''}</p>`
+            : `<p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:10px;">Bu aşama henüz kaydedilmedi.</p>`;
+        html += `<div class="card" style="margin-bottom:16px;" id="ftpStageCard${stage.id}">
             <h3 style="color:#22d3ee;margin-bottom:8px;">${esc(stage.title)}</h3>
+            ${byLine}
             <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;">${esc(stage.intro)}</p>`;
         stage.modules.forEach(mod => {
             const md = (st.modules && st.modules[mod.id]) || { items: {}, note: '' };
@@ -3421,43 +3443,127 @@ function renderFtpEval(uid, data) {
                     <option value="tekrar" ${st.status==='tekrar'?'selected':''}>Tekrar gerekli</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Bu kayıt için FTO notu (aşama)</label>
+                <textarea class="form-control ftp-stage-note" data-stage="${stage.id}" rows="2" ${canEdit ? '' : 'disabled'} placeholder="Bu aşamada ne yapıldı...">${esc(st.stageNote || '')}</textarea>
+            </div>
+            ${canEdit ? `<button class="btn btn-success btn-sm" onclick="saveFtpStage('${uid}', ${stage.id})"><i class="fa-solid fa-floppy-disk"></i> ${stage.id}. Aşamayı Kaydet</button>` : ''}
         </div>`;
     });
+
     html += `
         <div class="card">
-            <label>Genel FTO notu</label>
+            <label>Genel FTO notu (tüm program)</label>
             <textarea class="form-control" id="ftpGeneralNote" rows="3" ${canEdit ? '' : 'disabled'}>${esc(data.notes || '')}</textarea>
-            ${canEdit ? `<button class="btn btn-success" style="margin-top:12px;" onclick="saveFtpProgress('${uid}')"><i class="fa-solid fa-floppy-disk"></i> Değerlendirmeyi Kaydet</button>` : ''}
+            ${canEdit ? `<button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="saveFtpGeneralNote('${uid}')"><i class="fa-solid fa-floppy-disk"></i> Genel Notu Kaydet</button>` : ''}
         </div>`;
     box.innerHTML = html;
 }
 
-function saveFtpProgress(uid) {
-    if (!isFtoOfficer()) return alert('Yetkin yok.');
-    const stages = {};
-    FTP_STAGES.forEach(stage => {
-        stages[stage.id] = { modules: {}, status: 'devam' };
-        const statusEl = document.querySelector(`.ftp-stage-status[data-stage="${stage.id}"]`);
-        if (statusEl) stages[stage.id].status = statusEl.value;
-        stage.modules.forEach(mod => {
-            stages[stage.id].modules[mod.id] = { items: {}, note: '' };
-            const noteEl = document.querySelector(`.ftp-mod-note[data-stage="${stage.id}"][data-mod="${mod.id}"]`);
-            if (noteEl) stages[stage.id].modules[mod.id].note = noteEl.value;
-            document.querySelectorAll(`select[data-stage="${stage.id}"][data-mod="${mod.id}"]`).forEach(sel => {
-                stages[stage.id].modules[mod.id].items[sel.dataset.item] = sel.value;
-            });
+function formatFtpDate(ts) {
+    try {
+        const d = ts.toDate ? ts.toDate() : (ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts));
+        if (isNaN(d)) return '';
+        return d.toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
+    } catch (e) { return ''; }
+}
+
+function collectStageData(stageId) {
+    const stage = FTP_STAGES.find(s => s.id === stageId);
+    if (!stage) return null;
+    const statusEl = document.querySelector(`.ftp-stage-status[data-stage="${stageId}"]`);
+    const noteEl = document.querySelector(`.ftp-stage-note[data-stage="${stageId}"]`);
+    const out = { modules: {}, status: statusEl ? statusEl.value : 'devam', stageNote: noteEl ? noteEl.value : '' };
+    stage.modules.forEach(mod => {
+        out.modules[mod.id] = { items: {}, note: '' };
+        const modNote = document.querySelector(`.ftp-mod-note[data-stage="${stageId}"][data-mod="${mod.id}"]`);
+        if (modNote) out.modules[mod.id].note = modNote.value;
+        document.querySelectorAll(`select[data-stage="${stageId}"][data-mod="${mod.id}"]`).forEach(sel => {
+            out.modules[mod.id].items[sel.dataset.item] = sel.value;
         });
     });
-    const notes = document.getElementById('ftpGeneralNote')?.value || '';
-    db.collection('ftpProgress').doc(uid).set({
-        stages, notes,
-        traineeId: uid,
-        traineeName: (allOfficers.find(u => u.id === uid) || {}).name || '',
-        lastFtoId: currentUserId,
-        lastFtoName: currentUserData.name + ' (' + currentUserData.rank + ')',
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).then(() => showToast('Kaydedildi', 'FTP değerlendirmesi güncellendi.'));
+    return out;
 }
+
+function saveFtpStage(uid, stageId) {
+    if (!isFtoOfficer()) return alert('Yetkin yok.');
+    const stageData = collectStageData(stageId);
+    if (!stageData) return;
+    const ftoName = currentUserData.name + ' (' + currentUserData.rank + ')';
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    stageData.evaluatedBy = ftoName;
+    stageData.evaluatedById = currentUserId;
+    stageData.evaluatedAt = now;
+
+    const histEntry = {
+        stageId: stageId,
+        ftoName: ftoName,
+        ftoId: currentUserId,
+        status: stageData.status,
+        note: stageData.stageNote || '',
+        at: now
+    };
+
+    const ref = db.collection('ftpProgress').doc(uid);
+    ref.get().then(snap => {
+        const prev = snap.exists ? snap.data() : {};
+        const stages = prev.stages || {};
+        stages[stageId] = stageData;
+        const history = Array.isArray(prev.history) ? prev.history.slice() : [];
+        history.push(histEntry);
+        return ref.set({
+            stages,
+            history,
+            traineeId: uid,
+            traineeName: (allOfficers.find(u => u.id === uid) || {}).name || '',
+            lastFtoId: currentUserId,
+            lastFtoName: ftoName,
+            updatedAt: now
+        }, { merge: true });
+    }).then(() => {
+        showToast('Kaydedildi', stageId + '. aşama kaydı alındı — ' + ftoName);
+        loadFtpProgress(uid);
+    }).catch(e => alert(e.message));
+}
+
+function saveFtpGeneralNote(uid) {
+    if (!isFtoOfficer()) return alert('Yetkin yok.');
+    const notes = document.getElementById('ftpGeneralNote')?.value || '';
+    const ftoName = currentUserData.name + ' (' + currentUserData.rank + ')';
+    db.collection('ftpProgress').doc(uid).set({
+        notes,
+        lastFtoId: currentUserId,
+        lastFtoName: ftoName,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(() => showToast('Kaydedildi', 'Genel not güncellendi.'));
+}
+
+function saveFtpProgress(uid) {
+    // geriye uyum: tüm aşamaları sırayla kaydet
+    if (!isFtoOfficer()) return alert('Yetkin yok.');
+    let chain = Promise.resolve();
+    FTP_STAGES.forEach(stage => {
+        chain = chain.then(() => new Promise((resolve, reject) => {
+            const stageData = collectStageData(stage.id);
+            const ftoName = currentUserData.name + ' (' + currentUserData.rank + ')';
+            const now = firebase.firestore.FieldValue.serverTimestamp();
+            stageData.evaluatedBy = ftoName;
+            stageData.evaluatedById = currentUserId;
+            stageData.evaluatedAt = now;
+            db.collection('ftpProgress').doc(uid).set({
+                ['stages.' + stage.id]: stageData,
+                traineeId: uid,
+                lastFtoName: ftoName,
+                updatedAt: now
+            }, { merge: true }).then(resolve).catch(reject);
+        }));
+    });
+    const notes = document.getElementById('ftpGeneralNote')?.value || '';
+    chain.then(() => db.collection('ftpProgress').doc(uid).set({ notes }, { merge: true }))
+        .then(() => { showToast('Kaydedildi', 'Tüm aşamalar kaydedildi.'); loadFtpProgress(uid); })
+        .catch(e => alert(e.message));
+}
+
 
 </script>
 </body>
