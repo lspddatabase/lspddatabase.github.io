@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LSPD — Advanced MDC System</title>
+    <title>LSPD — Mercia Roleplay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -1260,7 +1260,7 @@ let attStatuses = {};
 const ranksList = [
     "Police Lieutenant II", "Police Lieutenant I",
     "Police Sergeant II", "Police Sergeant I",
-    "Detective Supervisor", "Detective II", "Detective I", "GND",
+    "Detective Supervisor", "Detective II", "Detective I",
     "Police Officer III+1", "Police Officer III", "Police Officer II", "Police Officer I"
 ];
 // Divizyonlar (LAPD / LSPD konsept)
@@ -1278,7 +1278,7 @@ const divisionsList = [
 const RANK_ORDER = [
     "Police Lieutenant II", "Police Lieutenant I",
     "Police Sergeant II", "Police Sergeant I",
-    "Detective Supervisor", "Detective II", "Detective I", "GND",
+    "Detective Supervisor", "Detective II", "Detective I",
     "Police Officer III+1", "Police Officer III", "Police Officer II", "Police Officer I"
 ];
 function rankSortIndex(rank) {
@@ -1288,11 +1288,11 @@ function rankSortIndex(rank) {
 const authorizedRanks = ["Police Lieutenant II", "Police Lieutenant I", "Police Sergeant II"];
 const attendanceRanks = [
     "Police Officer III", "Police Officer III+1",
-    "Detective I", "Detective II", "Detective Supervisor", "GND",
+    "Detective I", "Detective II", "Detective Supervisor",
     "Police Sergeant I", "Police Sergeant II",
     "Police Lieutenant I", "Police Lieutenant II"
 ];
-const detectiveRanks = ["Detective I", "Detective II", "Detective Supervisor", "GND", "Police Lieutenant I", "Police Lieutenant II"];
+const detectiveRanks = ["Detective I", "Detective II", "Detective Supervisor", "Police Lieutenant I", "Police Lieutenant II"];
 const LOGO = "https://i.imgur.com/6VBx3io.png";
 let allDetRecords = [];
 let filteredDet = [];
@@ -2205,8 +2205,16 @@ function loadActiveEdit() {
                     <td><input class="form-control" id="eb_${id}" value="${esc(u.badge || '')}" style="width:70px"></td>
                     <td><select class="form-control" id="er_${id}">${opts}</select></td>
                     <td><select class="form-control" id="ed_${id}">${divisionOptions(u.division || 'Patrol — Central')}</select></td>
-                    <td style="text-align:center;"><input type="checkbox" id="efto_${id}" ${u.isFTO ? 'checked' : ''} title="Field Training Officer"></td>
-                    <td style="text-align:center;"><input type="checkbox" id="eftp_${id}" ${u.isFTPTrainee ? 'checked' : ''} title="FTP Öğrenci (PO1)"></td>
+                    <td style="text-align:center;white-space:nowrap;">
+                        <label style="font-size:0.72rem;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                            <input type="checkbox" id="efto_${id}" ${u.isFTO ? 'checked' : ''}> <strong style="color:#22d3ee;">FTO</strong>
+                        </label>
+                    </td>
+                    <td style="text-align:center;white-space:nowrap;">
+                        <label style="font-size:0.72rem;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                            <input type="checkbox" id="eftp_${id}" ${u.isFTPTrainee ? 'checked' : ''}> <strong style="color:#fbbf24;">FTP</strong>
+                        </label>
+                    </td>
                     <td><input class="form-control" id="ea_${id}" value="${esc(u.avatar || LOGO)}"></td>
                     <td style="white-space:nowrap;">
                         <button class="btn btn-warning btn-sm" onclick="updateUser('${id}')">Güncelle</button>
