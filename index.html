@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LSPD — Advanced MDC System</title>
+    <title>LSPD — Mercia Roleplay</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -659,6 +659,9 @@
         <div class="nav-item" id="attendanceNav" style="display:none;" data-tab="attendance" onclick="switchTab('attendance', this)">
             <i class="fa-solid fa-clipboard-user"></i> Yoklama
         </div>
+        <div class="nav-item" id="ftpNav" style="display:none;color:#22d3ee;" data-tab="ftp" onclick="switchTab('ftp', this)">
+            <i class="fa-solid fa-graduation-cap"></i> FTO / FTP
+        </div>
         <div class="nav-item" data-tab="profile" onclick="switchTab('profile', this)">
             <i class="fa-solid fa-id-badge"></i> Profilim
         </div>
@@ -1170,6 +1173,23 @@
             </div>
         </div>
 
+        <!-- FTO / FTP -->
+        <div id="tab-ftp" style="display:none;">
+            <div class="page-header">
+                <div>
+                    <h2>Saha Eğitim Programı (FTP)</h2>
+                    <p class="desc">Field Training Officer — 3 aşamalı eğitim takibi</p>
+                </div>
+            </div>
+            <div id="ftpRoleBanner" class="card" style="margin-bottom:16px;padding:14px 16px;"></div>
+            <div class="hb-tabs" style="margin-bottom:16px;">
+                <button class="hb-tab active" id="ftpTabList" onclick="ftpView('list',this)">FTP Listesi</button>
+                <button class="hb-tab" id="ftpTabEval" onclick="ftpView('eval',this)" style="display:none;">Değerlendirme</button>
+            </div>
+            <div id="ftpListView"></div>
+            <div id="ftpEvalView" style="display:none;"></div>
+        </div>
+
         <div id="tab-admin" style="display:none;">
             <div class="page-header">
                 <div><h2>Bekleyen Başvurular</h2><p class="desc">Onay bekleyen memur kayıtları</p></div>
@@ -1180,7 +1200,7 @@
                         <thead>
                             <tr>
                                 <th>IC İsim</th><th>Onaylanacak İsim</th><th>Rozet</th>
-                                <th>Rütbe</th><th>Divizyon</th><th>Avatar URL</th><th>İşlem</th>
+                                <th>Rütbe</th><th>Divizyon</th><th>FTO</th><th>FTP Öğr.</th><th>Avatar URL</th><th>İşlem</th>
                             </tr>
                         </thead>
                         <tbody id="pendingTable"></tbody>
@@ -1681,6 +1701,9 @@ auth.onAuthStateChanged(user => {
             if (canAccessIad()) {
                 document.getElementById('iadNav').style.display = 'flex';
             }
+            if (canAccessFtp()) {
+                document.getElementById('ftpNav').style.display = 'flex';
+            }
             loadReports();
             loadOfficers();
             renderHandbook();
@@ -1696,13 +1719,14 @@ function logout() { auth.signOut(); }
 
 function switchTab(tab, el) {
     if (tab !== 'newReport') resetReportForm();
-    ['dashboard','reports','officers','handbook','detective','gang','newReport','calculator','profile','iad','attendance','admin'].forEach(t => {
+    ['dashboard','reports','officers','handbook','detective','gang','newReport','calculator','profile','iad','attendance','ftp','admin'].forEach(t => {
         const e = document.getElementById('tab-' + t);
         if (e) e.style.display = 'none';
     });
     if (tab === 'calculator') initCalculator();
     if (tab === 'profile') loadProfile();
     if (tab === 'iad') loadIad();
+    if (tab === 'ftp') loadFtpPanel();
     document.getElementById('tab-' + tab).style.display = 'block';
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
@@ -1965,6 +1989,8 @@ function loadOfficers() {
                     <div class="officer-name">${esc(u.name || 'Bilinmeyen')}</div>
                     <span class="badge-tag ${rankClass(u.rank)}">${esc(u.rank || 'Police Officer I')}</span>
                     ${u.division ? `<div style="font-size:0.7rem;color:var(--text-dim);margin-top:6px;">${esc(u.division)}</div>` : ''}
+                    ${u.isFTO ? `<span class="badge-tag" style="margin-top:6px;background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.35);">FTO</span>` : ''}
+                    ${u.isFTPTrainee ? `<span class="badge-tag" style="margin-top:6px;background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">FTP Öğrenci</span>` : ''}
                 </div>
             `).join('');
         }
@@ -2185,6 +2211,8 @@ function loadActiveEdit() {
                     <td><input class="form-control" id="eb_${id}" value="${esc(u.badge || '')}" style="width:70px"></td>
                     <td><select class="form-control" id="er_${id}">${opts}</select></td>
                     <td><select class="form-control" id="ed_${id}">${divisionOptions(u.division || 'Patrol — Central')}</select></td>
+                    <td style="text-align:center;"><input type="checkbox" id="efto_${id}" ${u.isFTO ? 'checked' : ''} title="Field Training Officer"></td>
+                    <td style="text-align:center;"><input type="checkbox" id="eftp_${id}" ${u.isFTPTrainee ? 'checked' : ''} title="FTP Öğrenci (PO1)"></td>
                     <td><input class="form-control" id="ea_${id}" value="${esc(u.avatar || LOGO)}"></td>
                     <td style="white-space:nowrap;">
                         <button class="btn btn-warning btn-sm" onclick="updateUser('${id}')">Güncelle</button>
@@ -2224,9 +2252,11 @@ function updateUser(uid) {
     const rank = document.getElementById('er_' + uid).value;
     const division = document.getElementById('ed_' + uid).value;
     const avatar = document.getElementById('ea_' + uid).value.trim() || LOGO;
+    const isFTO = !!(document.getElementById('efto_' + uid)?.checked);
+    const isFTPTrainee = !!(document.getElementById('eftp_' + uid)?.checked);
     if (!name || !badge) return alert('İsim ve rozet zorunlu.');
     db.collection('users').doc(uid).update({
-        name, badge, rank, division, avatar,
+        name, badge, rank, division, avatar, isFTO, isFTPTrainee,
         isAdmin: rank.includes('Lieutenant')
     }).then(() => showToast('Güncellendi', 'Profil revize edildi.'));
 }
@@ -3124,6 +3154,309 @@ function searchHandbook() {
         }
     }
 }
+
+/* ========== FTO / FTP ========== */
+function canAccessFtp() {
+    if (!currentUserData) return false;
+    if (currentUserData.isAdmin || currentUserData.isFTO || currentUserData.isFTPTrainee) return true;
+    if (authorizedRanks.includes(currentUserData.rank)) return true;
+    if ((currentUserData.rank || '').includes('Lieutenant') || (currentUserData.rank || '').includes('Sergeant')) return true;
+    return false;
+}
+function isFtoOfficer() {
+    return !!(currentUserData && (currentUserData.isFTO || currentUserData.isAdmin || authorizedRanks.includes(currentUserData.rank)));
+}
+
+const FTP_STAGES = [
+    {
+        id: 1,
+        title: "FTP I. Aşama — Temel Saha",
+        intro: "FTO, öğrenciyi saha görevlerine hazırlamak amacıyla temel departman prosedürlerini, telsiz kullanımını ve saha uygulamalarını aktarmalıdır. İlk aşamada öğrenci araç kullanamaz. Öğrenci yan koltukta FTO'nun araç kullanımı, telsiz trafiği, olaylara yaklaşımı ve karar süreçlerini gözlemlemelidir.",
+        modules: [
+            {
+                id: "1-01",
+                title: "01 | Telsiz ve Birim Prosedürleri",
+                items: [
+                    "Birim kodları ve çağrı işaretlerinin kullanımı",
+                    "Telsiz kodları ve anlamları",
+                    "Telsiz kullanım kuralları",
+                    "Vakalara yönelim ve olay yerine intikal",
+                    "Destek talep etme prosedürü",
+                    "Olay sırasında düzenli durum bildirimi (update)",
+                    "Kovalamaca başlangıcı ve telsiz bildirimi",
+                    "Kovalamaca sırasında gerekli güncellemeler"
+                ],
+                goal: "Öğrencinin telsizi aktif, anlaşılır ve prosedüre uygun şekilde kullanabildiğinden emin olunmalıdır."
+            },
+            {
+                id: "1-02",
+                title: "02 | Güç Kullanımı — Force Matrix",
+                items: [
+                    "Force Matrix sisteminin açıklanması",
+                    "Taser kullanımı ve uygun senaryolar",
+                    "Beanbag / daha az ölümcül seçenekler",
+                    "Ateşli silah — ne zaman devreye girer",
+                    "Ölümcül olmayan güç kullanımı",
+                    "Ölümcül güç kullanımı ve orantılılık",
+                    "Tehdit seviyesi değerlendirme senaryoları"
+                ],
+                goal: "Öğrenci tehdit seviyesini değerlendirebilmeli; uygulanan gücün tehditle orantılı olması gerektiğini kavramalıdır."
+            }
+        ]
+    },
+    {
+        id: 2,
+        title: "FTP II. Aşama — Aktif Katılım",
+        intro: "Öğrenci kontrollü şekilde sürücü koltuğuna geçer ve basit çağrıları FTO gözetiminde yönetmeye başlar. FTO hâlâ nihai sorumludur; öğrenci adım adım inisiyatif alır.",
+        modules: [
+            {
+                id: "2-01",
+                title: "01 | Araç Kullanımı ve Trafik Güvenliği",
+                items: [
+                    "Code 2 / Code 3 sürüş farkı",
+                    "Güvenli duruş ve park konumları",
+                    "Trafik çevirmesi (10-56) prosedürü",
+                    "Araç çevresi güvenlik taraması",
+                    "Yolcu / şüpheli indirme güvenliği"
+                ],
+                goal: "Öğrenci aracı güvenli kullanır; trafik durdurmalarında pozisyon ve yaklaşımı doğru uygular."
+            },
+            {
+                id: "2-02",
+                title: "02 | Şahıs Teması ve Kontrol",
+                items: [
+                    "İlk temas ve kimlik sorma",
+                    "Terry stop / makul şüphe kavramı",
+                    "Üst yoklama (frisk) sınırları",
+                    "Kelepçe ve gözaltı pozisyonu",
+                    "Araç arama temelleri (Carroll mantığı)"
+                ],
+                goal: "Öğrenci yasal sınırlar içinde şahıs temasını yönetir; güvenlik mesafesini korur."
+            },
+            {
+                id: "2-03",
+                title: "03 | Rapor ve MDC",
+                items: [
+                    "Olay notu tutma",
+                    "MDC / rapor alanlarını doldurma",
+                    "Şüpheli ve tanık bilgisi toplama",
+                    "Kanıt / foto notu"
+                ],
+                goal: "Öğrenci temel raporu eksiksiz ve okunabilir şekilde üretebilir."
+            }
+        ]
+    },
+    {
+        id: 3,
+        title: "FTP III. Aşama — Bağımsız Hazırlık",
+        intro: "Öğrenci neredeyse solo çalışır; FTO gözlemci konumundadır. Amaç: solo devriyeye hazır onay veya ek eğitim kararı.",
+        modules: [
+            {
+                id: "3-01",
+                title: "01 | Tam Çağrı Yönetimi",
+                items: [
+                    "Çağrıyı alma ve intikal planı",
+                    "Sahada öncelik belirleme",
+                    "Destek zamanlaması",
+                    "Olay kapatma (Code 4) kararı"
+                ],
+                goal: "Öğrenci sıradan bir çağrıyı baştan sona tek başına yönetebilir."
+            },
+            {
+                id: "3-02",
+                title: "02 | Stres ve Karar",
+                items: [
+                    "Yüksek tempo senaryoda sakin kalma",
+                    "Yanlış kararı fark edip düzeltme",
+                    "FTO'ya net brifing verebilme"
+                ],
+                goal: "Öğrenci stres altında prosedürü bozmadan karar üretir."
+            },
+            {
+                id: "3-03",
+                title: "03 | Solo Onay Kontrol Listesi",
+                items: [
+                    "Telsiz ve birim prosedürleri yeterli",
+                    "Güç kullanımı orantılı",
+                    "Araç ve trafik güvenliği yeterli",
+                    "Şahıs teması yasal ve güvenli",
+                    "Rapor kalitesi kabul edilebilir",
+                    "FTO solo devriye için onay verir"
+                ],
+                goal: "Tüm maddeler Tamam ise öğrenci FTP'den mezun sayılır."
+            }
+        ]
+    }
+];
+
+let ftpSelectedTrainee = null;
+let ftpProgressDoc = null;
+
+function loadFtpPanel() {
+    const banner = document.getElementById('ftpRoleBanner');
+    if (!banner) return;
+    if (isFtoOfficer()) {
+        banner.innerHTML = `<strong style="color:#22d3ee;">FTO yetkisi</strong> — FTP listesindeki öğrencilere aşama değerlendirmesi yazabilirsin.`;
+    } else if (currentUserData.isFTPTrainee) {
+        banner.innerHTML = `<strong style="color:#fbbf24;">FTP öğrencisisin</strong> — İlerlemeni buradan takip edebilirsin.`;
+    } else {
+        banner.innerHTML = `Yönetim görünümü — tüm FTP öğrencileri.`;
+    }
+    ftpView('list');
+}
+
+function ftpView(mode, btn) {
+    document.querySelectorAll('#tab-ftp .hb-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else document.getElementById('ftpTabList')?.classList.add('active');
+    const list = document.getElementById('ftpListView');
+    const evalV = document.getElementById('ftpEvalView');
+    if (mode === 'list') {
+        list.style.display = 'block';
+        evalV.style.display = 'none';
+        document.getElementById('ftpTabEval').style.display = 'none';
+        renderFtpList();
+    } else {
+        list.style.display = 'none';
+        evalV.style.display = 'block';
+        document.getElementById('ftpTabEval').style.display = 'inline-flex';
+        document.getElementById('ftpTabEval').classList.add('active');
+        document.getElementById('ftpTabList').classList.remove('active');
+    }
+}
+
+function renderFtpList() {
+    const box = document.getElementById('ftpListView');
+    if (!box) return;
+    const trainees = allOfficers.filter(u => u.isFTPTrainee || (u.rank === 'Police Officer I' && u.isFTPTrainee !== false && u.isFTPTrainee));
+    // only explicit isFTPTrainee
+    const list = allOfficers.filter(u => !!u.isFTPTrainee);
+    if (!list.length) {
+        box.innerHTML = `<div class="card empty-state"><i class="fa-solid fa-graduation-cap"></i><p>FTP öğrencisi yok. Personel Yönetimi'nden PO1'e <strong>FTP Öğr.</strong> işaretle.</p></div>`;
+        return;
+    }
+    box.innerHTML = `<div class="officers-grid">` + list.map(u => `
+        <div class="officer-card" style="cursor:pointer;" onclick="openFtpTrainee('${u.id}')">
+            <span class="officer-badge">#${esc(u.badge || '000')}</span>
+            <img src="${esc(u.avatar || LOGO)}" class="officer-avatar" onerror="this.src='${LOGO}'" alt="">
+            <div class="officer-name">${esc(u.name)}</div>
+            <span class="badge-tag rank-other">${esc(u.rank)}</span>
+            <div style="font-size:0.7rem;color:var(--text-dim);margin-top:6px;">Değerlendirme aç →</div>
+        </div>
+    `).join('') + `</div>`;
+}
+
+function openFtpTrainee(uid) {
+    if (!isFtoOfficer() && uid !== currentUserId) {
+        return alert('Sadece FTO değerlendirme yazabilir. Öğrenci kendi kaydını görüntüleyebilir.');
+    }
+    ftpSelectedTrainee = allOfficers.find(u => u.id === uid) || { id: uid };
+    if (!isFtoOfficer() && uid === currentUserId) {
+        ftpSelectedTrainee = { id: currentUserId, name: currentUserData.name, rank: currentUserData.rank, badge: currentUserData.badge };
+    }
+    document.getElementById('ftpTabEval').style.display = 'inline-flex';
+    ftpView('eval', document.getElementById('ftpTabEval'));
+    loadFtpProgress(uid);
+}
+
+function loadFtpProgress(uid) {
+    const box = document.getElementById('ftpEvalView');
+    box.innerHTML = `<div class="card empty-state"><i class="fa-solid fa-spinner fa-spin"></i><p>Yükleniyor…</p></div>`;
+    db.collection('ftpProgress').doc(uid).get().then(snap => {
+        const data = snap.exists ? snap.data() : { stages: {}, notes: '' };
+        ftpProgressDoc = data;
+        renderFtpEval(uid, data);
+    }).catch(e => {
+        box.innerHTML = `<div class="card"><p>Hata: ${esc(e.message)}</p></div>`;
+    });
+}
+
+function renderFtpEval(uid, data) {
+    const box = document.getElementById('ftpEvalView');
+    const t = allOfficers.find(u => u.id === uid) || ftpSelectedTrainee || {};
+    const canEdit = isFtoOfficer();
+    let html = `
+        <div class="card" style="margin-bottom:16px;">
+            <h3 style="margin-bottom:6px;">${esc(t.name || 'Öğrenci')} <span style="color:var(--text-dim);font-weight:400;">#${esc(t.badge || '')}</span></h3>
+            <p style="font-size:0.85rem;color:var(--text-muted);">${esc(t.rank || '')} · FTP değerlendirme paneli</p>
+            ${canEdit ? '' : '<p style="font-size:0.8rem;color:#fbbf24;margin-top:8px;">Salt okunur — FTO değilse düzenleyemezsin.</p>'}
+        </div>`;
+    FTP_STAGES.forEach(stage => {
+        const st = (data.stages && data.stages[stage.id]) || { modules: {}, status: 'devam' };
+        html += `<div class="card" style="margin-bottom:16px;">
+            <h3 style="color:#22d3ee;margin-bottom:8px;">${esc(stage.title)}</h3>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;">${esc(stage.intro)}</p>`;
+        stage.modules.forEach(mod => {
+            const md = (st.modules && st.modules[mod.id]) || { items: {}, note: '' };
+            html += `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
+                <h4 style="font-size:0.95rem;margin-bottom:8px;">${esc(mod.title)}</h4>
+                <ul style="list-style:none;padding:0;margin:0 0 10px;">`;
+            mod.items.forEach((item, idx) => {
+                const key = 'i' + idx;
+                const val = (md.items && md.items[key]) || '';
+                html += `<li style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem;">
+                    <span style="flex:1;min-width:180px;">${esc(item)}</span>
+                    <select class="form-control" style="width:auto;min-width:110px;" data-stage="${stage.id}" data-mod="${mod.id}" data-item="${key}" ${canEdit ? '' : 'disabled'}>
+                        <option value="" ${val===''?'selected':''}>—</option>
+                        <option value="tamam" ${val==='tamam'?'selected':''}>Tamam</option>
+                        <option value="kismi" ${val==='kismi'?'selected':''}>Kısmi</option>
+                        <option value="eksik" ${val==='eksik'?'selected':''}>Eksik</option>
+                    </select>
+                </li>`;
+            });
+            html += `</ul>
+                <p style="font-size:0.8rem;color:var(--gold);margin-bottom:8px;"><strong>FTO Hedefi:</strong> ${esc(mod.goal)}</p>
+                <label style="font-size:0.75rem;color:var(--text-dim);">Modül notu</label>
+                <textarea class="form-control ftp-mod-note" data-stage="${stage.id}" data-mod="${mod.id}" rows="2" ${canEdit ? '' : 'disabled'}>${esc(md.note || '')}</textarea>
+            </div>`;
+        });
+        html += `
+            <div class="form-group" style="margin-top:8px;">
+                <label>Aşama durumu</label>
+                <select class="form-control ftp-stage-status" data-stage="${stage.id}" ${canEdit ? '' : 'disabled'}>
+                    <option value="devam" ${st.status==='devam'?'selected':''}>Devam ediyor</option>
+                    <option value="tamam" ${st.status==='tamam'?'selected':''}>Aşama tamam</option>
+                    <option value="tekrar" ${st.status==='tekrar'?'selected':''}>Tekrar gerekli</option>
+                </select>
+            </div>
+        </div>`;
+    });
+    html += `
+        <div class="card">
+            <label>Genel FTO notu</label>
+            <textarea class="form-control" id="ftpGeneralNote" rows="3" ${canEdit ? '' : 'disabled'}>${esc(data.notes || '')}</textarea>
+            ${canEdit ? `<button class="btn btn-success" style="margin-top:12px;" onclick="saveFtpProgress('${uid}')"><i class="fa-solid fa-floppy-disk"></i> Değerlendirmeyi Kaydet</button>` : ''}
+        </div>`;
+    box.innerHTML = html;
+}
+
+function saveFtpProgress(uid) {
+    if (!isFtoOfficer()) return alert('Yetkin yok.');
+    const stages = {};
+    FTP_STAGES.forEach(stage => {
+        stages[stage.id] = { modules: {}, status: 'devam' };
+        const statusEl = document.querySelector(`.ftp-stage-status[data-stage="${stage.id}"]`);
+        if (statusEl) stages[stage.id].status = statusEl.value;
+        stage.modules.forEach(mod => {
+            stages[stage.id].modules[mod.id] = { items: {}, note: '' };
+            const noteEl = document.querySelector(`.ftp-mod-note[data-stage="${stage.id}"][data-mod="${mod.id}"]`);
+            if (noteEl) stages[stage.id].modules[mod.id].note = noteEl.value;
+            document.querySelectorAll(`select[data-stage="${stage.id}"][data-mod="${mod.id}"]`).forEach(sel => {
+                stages[stage.id].modules[mod.id].items[sel.dataset.item] = sel.value;
+            });
+        });
+    });
+    const notes = document.getElementById('ftpGeneralNote')?.value || '';
+    db.collection('ftpProgress').doc(uid).set({
+        stages, notes,
+        traineeId: uid,
+        traineeName: (allOfficers.find(u => u.id === uid) || {}).name || '',
+        lastFtoId: currentUserId,
+        lastFtoName: currentUserData.name + ' (' + currentUserData.rank + ')',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(() => showToast('Kaydedildi', 'FTP değerlendirmesi güncellendi.'));
+}
+
 </script>
 </body>
 </html>
