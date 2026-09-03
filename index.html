@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LSPD — Mercia Roleplay</title>
+    <title>LSPD — Advanced MDC System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -1260,31 +1260,25 @@ let attStatuses = {};
 const ranksList = [
     "Police Lieutenant II", "Police Lieutenant I",
     "Police Sergeant II", "Police Sergeant I",
-    "Detective Supervisor", "Detective II", "Detective I", "GIT",
+    "Detective Supervisor", "Detective II", "Detective I", "GND",
     "Police Officer III+1", "Police Officer III", "Police Officer II", "Police Officer I"
 ];
 // Divizyonlar (LAPD / LSPD konsept)
 const divisionsList = [
-    "Patrol — Central",
-    "Patrol — Mission Row",
-    "Patrol — Vespucci",
-    "Patrol — Rockford",
-    "Patrol — Davis",
+    "Patrol Division",
     "Metropolitan Division",
     "Traffic Division",
     "Air Support Division",
     "Internal Affairs Division",
-    "GIT — Gang Investigation Team",
+    "GND — Gang & Narcotics Division",
     "Detective Bureau",
-    "K9 Unit",
-    "Narcotics",
-    "Harbor / Port"
+    "K9 Unit"
 ];
 // En yüksek rütbe index 0 — sıralama için
 const RANK_ORDER = [
     "Police Lieutenant II", "Police Lieutenant I",
     "Police Sergeant II", "Police Sergeant I",
-    "Detective Supervisor", "Detective II", "Detective I", "GIT",
+    "Detective Supervisor", "Detective II", "Detective I", "GND",
     "Police Officer III+1", "Police Officer III", "Police Officer II", "Police Officer I"
 ];
 function rankSortIndex(rank) {
@@ -1294,11 +1288,11 @@ function rankSortIndex(rank) {
 const authorizedRanks = ["Police Lieutenant II", "Police Lieutenant I", "Police Sergeant II"];
 const attendanceRanks = [
     "Police Officer III", "Police Officer III+1",
-    "Detective I", "Detective II", "Detective Supervisor", "GIT",
+    "Detective I", "Detective II", "Detective Supervisor", "GND",
     "Police Sergeant I", "Police Sergeant II",
     "Police Lieutenant I", "Police Lieutenant II"
 ];
-const detectiveRanks = ["Detective I", "Detective II", "Detective Supervisor", "GIT", "Police Lieutenant I", "Police Lieutenant II"];
+const detectiveRanks = ["Detective I", "Detective II", "Detective Supervisor", "GND", "Police Lieutenant I", "Police Lieutenant II"];
 const LOGO = "https://i.imgur.com/6VBx3io.png";
 let allDetRecords = [];
 let filteredDet = [];
