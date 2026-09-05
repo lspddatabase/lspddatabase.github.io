@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LSPD — Politika &amp; Prosedür (SOP)</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06080f;--card:rgba(14,20,32,.92);--border:rgba(255,255,255,.07);--gold:#d4af37;--gold-dim:rgba(212,175,55,.12);--blue:#3b82f6;--cyan:#22d3ee;--text:#f1f5f9;--muted:#94a3b8;--dim:#64748b;--green:#10b981;--red:#ef4444;--orange:#f97316;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(212,175,55,.08),transparent),radial-gradient(ellipse 60% 40% at 90% 0,rgba(59,130,246,.07),transparent)}
+a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}
+.layout{display:grid;grid-template-columns:270px 1fr;min-height:100vh;position:relative;z-index:1}
+@media(max-width:920px){.layout{grid-template-columns:1fr}.side{position:sticky;top:0;height:auto;border-right:none;border-bottom:1px solid var(--border);z-index:40}.side nav{display:none}.side.open nav{display:block;max-height:60vh;overflow-y:auto}.menu-btn{display:inline-flex!important}.main{padding:16px 14px 48px}}
+.side{position:sticky;top:0;height:100vh;overflow-y:auto;background:rgba(8,11,20,.95);backdrop-filter:blur(12px);border-right:1px solid var(--border);padding:22px 14px 28px}
+.side .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1rem;margin-bottom:4px}
+.side .brand i{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--gold-dim);color:var(--gold)}
+.side .brand span{color:var(--gold)}.side .sub{font-size:.72rem;color:var(--dim);margin:0 0 16px 46px}
+.menu-btn{display:none;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;font-family:inherit;font-size:.85rem;cursor:pointer;margin-bottom:10px}
+.side .sec{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:16px 6px 6px;font-weight:600}
+.side nav a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.side nav a:hover,.side nav a.active{background:var(--gold-dim);color:var(--gold);text-decoration:none}
+.side nav a i{width:16px;text-align:center;font-size:.8rem;opacity:.85}
+.main{padding:28px 28px 64px;max-width:880px;width:100%;margin:0 auto}
+.hero{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(18,24,40,.95),rgba(12,18,32,.9));border:1px solid var(--border);border-radius:18px;padding:28px 26px;margin-bottom:28px}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.15),transparent 70%);pointer-events:none}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;padding:5px 12px;border-radius:20px;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(212,175,55,.28);margin-bottom:14px}
+.hero h1{font-size:1.55rem;font-weight:800;margin-bottom:8px}.hero p{color:var(--muted);font-size:.9rem;max-width:52ch}
+section{scroll-margin-top:20px}
+h2{display:flex;align-items:center;gap:10px;font-size:1.15rem;color:var(--gold);margin:28px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+h2 .num{font-size:.75rem;font-weight:800;color:var(--bg);background:var(--gold);width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+h3{font-size:.98rem;color:var(--cyan);margin:18px 0 8px;font-weight:600}h4{font-size:.9rem;margin:12px 0 6px;color:#e2e8f0}
+p,li{font-size:.9rem;color:#cbd5e1;margin-bottom:8px}ul,ol{padding-left:1.2rem;margin-bottom:12px}li{margin-bottom:5px}strong{color:#e2e8f0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:12px 0 16px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid var(--border);margin:12px 0 18px}
+table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:480px}
+th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}
+th{background:rgba(212,175,55,.08);color:var(--gold);font-weight:600}tr:last-child td{border-bottom:none}td{color:#cbd5e1}
+.note{font-size:.84rem;color:var(--muted);border-left:3px solid var(--blue);padding:10px 14px;margin:12px 0;background:rgba(59,130,246,.07);border-radius:0 10px 10px 0}
+.note.warn{border-left-color:var(--red);background:rgba(239,68,68,.07);color:#fca5a5}
+.note.ok{border-left-color:var(--green);background:rgba(16,185,129,.07);color:#6ee7b7}
+.note.gold{border-left-color:var(--gold);background:var(--gold-dim);color:#f0d78c}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}@media(max-width:640px){.grid-2{grid-template-columns:1fr}}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:6px;margin-right:4px;background:rgba(59,130,246,.15);color:#93c5fd}
+.pill.g{background:rgba(16,185,129,.15);color:#6ee7b7}.pill.r{background:rgba(239,68,68,.15);color:#fca5a5}.pill.o{background:rgba(249,115,22,.15);color:#fdba74}
+.footer{margin-top:40px;padding:18px 0 8px;border-top:1px solid var(--border);font-size:.78rem;color:var(--dim);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;font-size:.82rem;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);text-decoration:none}
+.btn:hover{border-color:var(--gold);color:var(--gold);text-decoration:none}
+.btn.primary{background:var(--gold-dim);border-color:rgba(212,175,55,.35);color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" id="side">
+  <div class="brand"><i class="fa-solid fa-shield-halved"></i><div>LSPD <span>SOP</span></div></div>
+  <div class="sub">Mercia RP · Politika 2026</div>
+  <button class="menu-btn" type="button" onclick="document.getElementById(\"side\").classList.toggle(\"open\")"><i class="fa-solid fa-bars"></i> İçindekiler</button>
+  <div class="sec">Organizasyon</div>
+  <nav>
+    <a href="#amac"><i class="fa-solid fa-bullseye"></i> Amaç</a>
+    <a href="#rutbe"><i class="fa-solid fa-ranking-star"></i> Rütbe</a>
+    <a href="#divizyon"><i class="fa-solid fa-building"></i> Divizyonlar</a>
+    <a href="#unite"><i class="fa-solid fa-walkie-talkie"></i> Ünite</a>
+    <a href="#telsiz"><i class="fa-solid fa-radio"></i> Telsiz</a>
+  </nav>
+  <div class="sec">Saha</div>
+  <nav>
+    <a href="#suphe"><i class="fa-solid fa-eye"></i> Şüphe</a>
+    <a href="#force"><i class="fa-solid fa-hand-fist"></i> Güç</a>
+    <a href="#upr"><i class="fa-solid fa-gun"></i> UPR</a>
+    <a href="#silah"><i class="fa-solid fa-vest"></i> Ekipman</a>
+    <a href="#devriye"><i class="fa-solid fa-car-side"></i> Devriye</a>
+    <a href="#trafik"><i class="fa-solid fa-traffic-light"></i> Trafik</a>
+    <a href="#gozalti"><i class="fa-solid fa-handcuffs"></i> Gözaltı</a>
+    <a href="#bolge"><i class="fa-solid fa-map-location-dot"></i> Bölgeler</a>
+  </nav>
+  <div class="sec">Büro</div>
+  <nav>
+    <a href="#mdc"><i class="fa-solid fa-database"></i> MDC</a>
+    <a href="#forum"><i class="fa-solid fa-user-secret"></i> Forum</a>
+    <a href="#ftp"><i class="fa-solid fa-graduation-cap"></i> FTO/FTP</a>
+    <a href="#iad"><i class="fa-solid fa-scale-balanced"></i> IAD</a>
+  </nav>
+  <div class="sec">Özet</div>
+  <nav>
+    <a href="#ozet"><i class="fa-solid fa-table"></i> Tablolar</a>
+    <a href="#disiplin"><i class="fa-solid fa-gavel"></i> Disiplin</a>
+    <a href="#yururluk"><i class="fa-solid fa-stamp"></i> Yürürlük</a>
+  </nav>
+</aside>
+<main class="main">
+<header class="hero">
+  <div class="badge"><i class="fa-solid fa-file-shield"></i> LSPD-POL-2026</div>
+  <h1>Los Santos Police Department</h1>
+  <p>Mercia Roleplay birleşik politika kılavuzu — saha, MDC, forum, FTO ve divizyon kuralları.</p>
+  <div class="top-actions">
+    <a class="btn primary" href="#amac"><i class="fa-solid fa-book-open"></i> Okumaya başla</a>
+    <a class="btn" href="index.html"><i class="fa-solid fa-arrow-left"></i> MDC’ye dön</a>
+  </div>
+</header>
+<section id="amac"><h2><span class="num">1</span> Amaç</h2>
+<p>Devriye, trafik, dedektiflik, GND, IAD, FTO/FTP ve tüm personel için ortak kurallar.</p>
+<div class="card"><h4>Hedefler</h4><ul><li>Rol kalitesi</li><li>Adil ortam</li><li>Yetki aşımını engellemek</li></ul></div>
+<div class="note gold">MDC onayı zorunlu. İhlaller IAD’ye gider.</div></section>
+<section id="rutbe"><h2><span class="num">2</span> Rütbe</h2>
+<p><strong>Sıra:</strong> Lt II → Lt I → Sgt II → Sgt I → Det. Sup → Det II → Det I → PO III+1 → III → II → I</p>
+<div class="grid-2">
+<div class="card"><h4>Lieutenant</h4><p>Komuta, personel, IAD.</p></div>
+<div class="card"><h4>Sergeant</h4><p>Saha, yoklama, disiplin.</p></div>
+<div class="card"><h4>Detective</h4><p>Soruşturma, forum, FID.</p></div>
+<div class="card"><h4>Officer</h4><p>Devriye; FTP’de FTO gözetimi.</p></div>
+</div></section>
+<section id="divizyon"><h2><span class="num">3</span> Divizyonlar</h2>
+<div class="table-wrap"><table>
+<tr><th>Divizyon</th><th>Görev</th></tr>
+<tr><td>Patrol Division</td><td>Devriye</td></tr>
+<tr><td>Metropolitan Division</td><td>Yoğun olay</td></tr>
+<tr><td>Traffic Division</td><td>Trafik</td></tr>
+<tr><td>Air Support Division</td><td>Hava</td></tr>
+<tr><td>Internal Affairs Division</td><td>IAD</td></tr>
+<tr><td>GND — Gang &amp; Narcotics</td><td>Çete / uyuşturucu</td></tr>
+<tr><td>Detective Bureau</td><td>Ağır suç</td></tr>
+<tr><td>K9 Unit</td><td>Köpek</td></tr>
+</table></div>
+<div class="note ok"><strong>GND rütbe değil divizyondur.</strong> Forum: Detective veya GND / Detective Bureau.</div></section>
+<section id="unite"><h2><span class="num">4</span> Ünite kodları</h2>
+<div class="table-wrap"><table>
+<tr><th>Kod</th><th>Anlam</th><th>Kod</th><th>Anlam</th></tr>
+<tr><td>A Adam</td><td>2’li</td><td>L Lincoln</td><td>Solo</td></tr>
+<tr><td>W William</td><td>Dedektif</td><td>T Tom</td><td>Trafik</td></tr>
+<tr><td>M Mary</td><td>Motor</td><td>AIR</td><td>Hava</td></tr>
+<tr><td>E Edward</td><td>Çekici</td><td>I Ida</td><td>IAD</td></tr>
+<tr><td>G George</td><td>GND</td><td>K K9</td><td>Köpek</td></tr>
+<tr><td>D David</td><td>SWAT</td><td>S Sam</td><td>Supervisor</td></tr>
+</table></div></section>
+<section id="telsiz"><h2><span class="num">5</span> Telsiz</h2>
+<ul>
+<li><span class="pill r">Code 0/99</span> Memur tehlikede</li>
+<li><span class="pill o">Code 2/3</span> Acil</li>
+<li><span class="pill g">Code 4</span> Kontrol altında</li>
+<li><span class="pill">Code 5/6</span> Gizli / olay yeri</li>
+</ul>
+<p>10-4 · 10-7/8 · 10-20 · 10-56 çevirme · 10-57 kovalamaca · 10-97 · 10-98</p>
+<div class="note warn">Sahte Code 0 yasak. Kovalamacada update zorunlu.</div></section>
+<section id="suphe"><h2><span class="num">6</span> Şüphe</h2>
+<div class="table-wrap"><table>
+<tr><th>Seviye</th><th>Yetki</th></tr>
+<tr><td>1 Basit</td><td>Yok</td></tr>
+<tr><td>2 Makul</td><td>Stop, kimlik, pat-down</td></tr>
+<tr><td>3 Yeterli</td><td>Gözaltı, araç arama</td></tr>
+</table></div>
+<div class="note warn">Sadece maske makul şüphe değildir.</div></section>
+<section id="force"><h2><span class="num">7</span> Güç</h2>
+<div class="table-wrap"><table>
+<tr><th>Seviye</th><th>Memur</th></tr>
+<tr><td>1–2</td><td>Sözlü / temas</td></tr>
+<tr><td>3–4</td><td>Kontrol / taser-baton</td></tr>
+<tr><td>5</td><td>Ateşli silah (hayati tehdit)</td></tr>
+</table></div></section>
+<section id="upr"><h2><span class="num">8</span> UPR</h2>
+<div class="grid-2">
+<div class="card"><h4><span class="pill g">İzinli</span></h4><p>MP5 / M4 — zorunlu halde + bildirim.</p></div>
+<div class="card"><h4><span class="pill r">Yasak</span></h4><p>Tabanca, Deagle, pompalı.</p></div>
+</div></section>
+<section id="silah"><h2><span class="num">9</span> Ekipman</h2>
+<p>Standart: silah, taser, baton, OC, kelepçe, radyo. SWAT: M4/MP5, kalkan, flashbang.</p></section>
+<section id="devriye"><h2><span class="num">10</span> Devriye</h2>
+<ul><li>Emir zinciri</li><li>Şüphe + Force Matrix</li><li>Camping disiplin</li></ul></section>
+<section id="trafik"><h2><span class="num">11</span> Trafik</h2>
+<ul><li>Yasal ihlal / makul şüphe</li><li>Delilsiz bagaj yok</li></ul></section>
+<section id="gozalti"><h2><span class="num">12</span> Gözaltı</h2>
+<ul><li>Miranda</li><li>Avukat hakkı</li><li>Terry / Carroll / Whren</li></ul></section>
+<section id="bolge"><h2><span class="num">13</span> Bölgeler</h2>
+<p><strong>Gri bölge:</strong> rutin yasak — 911 / takip / warrant.</p>
+<div class="note warn">Camping yasak.</div>
+<p><strong>Redzone:</strong> min 2 araç / 4 memur + Sergeant+.</p>
+<p><strong>Özel mülk:</strong> anonim ihbar yetmez.</p></section>
+<section id="mdc"><h2><span class="num">14</span> MDC</h2>
+<ul><li>Rapor zorunlu</li><li>Yoklama damgalı</li></ul></section>
+<section id="forum"><h2><span class="num">15</span> Forum</h2>
+<p>Detective veya GND / Detective Bureau divizyonu. Her dosya ayrı konu.</p></section>
+<section id="ftp"><h2><span class="num">16</span> FTO / FTP</h2>
+<ul><li>I gözlem · II aktif · III solo</li><li>Aşama kaydı + FTO adı</li></ul></section>
+<section id="iad"><h2><span class="num">17</span> IAD</h2>
+<p>Sergeant+ / IAD. Güç aşımı, camping, UPR, FTP kötüye kullanım.</p></section>
+<section id="ozet"><h2><span class="num">18</span> Özet</h2>
+<div class="table-wrap"><table>
+<tr><th>Alan</th><th>Şart</th></tr>
+<tr><td>Silah alanı</td><td>911 / takip / warrant</td></tr>
+<tr><td>Redzone</td><td>2 araç / 4 memur + Sgt+</td></tr>
+<tr><td>Özel mülk</td><td>Görsel + Supervisor</td></tr>
+</table></div></section>
+<section id="disiplin"><h2><span class="num">19</span> Disiplin</h2>
+<div class="table-wrap"><table>
+<tr><th>İhlal</th><th>Sonuç</th></tr>
+<tr><td>Telsiz / rapor</td><td>Uyarı → IAD</td></tr>
+<tr><td>Güç / camping / UPR</td><td>IAD</td></tr>
+<tr><td>FTP kötüye kullanım</td><td>FTO iptali + IAD</td></tr>
+</table></div></section>
+<section id="yururluk"><h2><span class="num">20</span> Yürürlük</h2>
+<p>Yayın anında bağlayıcı. “Bilmiyordum” mazeret değil.</p>
+<div class="card"><p><strong>Onay:</strong> LSPD Komutanlığı · <strong>Kod:</strong> LSPD-POL-2026</p></div></section>
+<div class="footer"><span>Mercia Roleplay · LSPD</span><span>Tüm personel için bağlayıcı</span></div>
+</main>
+</div>
+<script>
+document.querySelectorAll(".side nav a").forEach(a=>{
+ a.addEventListener("click",()=>{
+  document.querySelectorAll(".side nav a").forEach(x=>x.classList.remove("active"));
+  a.classList.add("active");
+  if(window.innerWidth<=920)document.getElementById("side").classList.remove("open");
+ });
+});
+</script>
+</body>
+</html>
