@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LSPD Forum — SMF Style</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --bg: #e9eef5;
+  --bg2: #d8e0ea;
+  --card: #ffffff;
+  --border: #b8c4d4;
+  --header: #1a3a5c;
+  --header2: #0f2740;
+  --link: #1a5a9c;
+  --link-hover: #0d3d6e;
+  --accent: #2d6aa0;
+  --gold: #c9a227;
+  --text: #1c2430;
+  --muted: #5a6a7a;
+  --cat-bg: #2a4a6a;
+  --row-alt: #f4f7fb;
+  --online: #2e8b57;
+  --shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", Inter, Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  min-height: 100vh;
+}
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); text-decoration: underline; }
+
+/* SMF top bar */
+.topbar {
+  background: linear-gradient(180deg, var(--header) 0%, var(--header2) 100%);
+  color: #fff; border-bottom: 3px solid var(--gold);
+}
+.topbar-inner {
+  max-width: 1100px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand img, .brand .logo {
+  width: 48px; height: 48px; border-radius: 6px; background: rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--gold);
+}
+.brand h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .02em; }
+.brand h1 span { color: var(--gold); font-weight: 400; font-size: 0.85rem; display: block; }
+.userbox { font-size: 0.85rem; text-align: right; }
+.userbox a { color: #cde; margin-left: 10px; }
+.userbox a:hover { color: #fff; }
+.userbox .uname { color: var(--gold); font-weight: 600; }
+
+.navstrip {
+  background: #243f5c; border-bottom: 1px solid #0a1a2a;
+}
+.navstrip-inner {
+  max-width: 1100px; margin: 0 auto; padding: 0 12px;
+  display: flex; flex-wrap: wrap; gap: 0;
+}
+.navstrip a {
+  color: #d0dce8; padding: 9px 14px; font-size: 0.82rem; font-weight: 600;
+  border-right: 1px solid rgba(255,255,255,.08); display: inline-block;
+}
+.navstrip a:hover { background: rgba(255,255,255,.08); color: #fff; text-decoration: none; }
+
+.wrap { max-width: 1100px; margin: 14px auto 40px; padding: 0 12px; }
+
+/* Login panel */
+.login-panel {
+  max-width: 420px; margin: 40px auto; background: var(--card);
+  border: 1px solid var(--border); border-radius: 4px; box-shadow: var(--shadow);
+  padding: 24px;
+}
+.login-panel h2 {
+  background: var(--cat-bg); color: #fff; margin: -24px -24px 18px;
+  padding: 12px 16px; font-size: 1rem; border-radius: 4px 4px 0 0;
+}
+.login-panel label { display: block; font-weight: 600; margin: 10px 0 4px; }
+.login-panel input {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 3px; font-size: 0.95rem;
+}
+.login-panel .btn-row { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+.err { color: #b00; font-size: 0.85rem; margin-top: 8px; display: none; }
+
+.btn {
+  display: inline-block; padding: 7px 14px; border-radius: 3px; border: 1px solid #888;
+  background: linear-gradient(180deg, #f8f8f8, #e0e0e0); color: #222; font-weight: 600;
+  font-size: 0.85rem; cursor: pointer; font-family: inherit;
+}
+.btn:hover { filter: brightness(1.03); }
+.btn-primary {
+  background: linear-gradient(180deg, #3a7ab8, #2a5a90); color: #fff; border-color: #1a4a70;
+}
+.btn-primary:hover { color: #fff; text-decoration: none; }
+.btn-sm { padding: 4px 10px; font-size: 0.78rem; }
+
+/* Breadcrumb */
+.navigate {
+  background: var(--card); border: 1px solid var(--border); padding: 8px 12px;
+  margin-bottom: 12px; border-radius: 3px; font-size: 0.85rem;
+}
+.navigate a { font-weight: 600; }
+
+/* Category / board index — classic SMF table */
+.cat {
+  margin-bottom: 14px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden;
+  box-shadow: var(--shadow); background: var(--card);
+}
+.cat-header {
+  background: linear-gradient(180deg, #3a5a7a, var(--cat-bg));
+  color: #fff; padding: 8px 12px; font-weight: 700; font-size: 0.95rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.cat-header a { color: #fff; }
+.board-table { width: 100%; border-collapse: collapse; }
+.board-table th {
+  background: var(--bg2); color: var(--muted); font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: .04em; padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border);
+}
+.board-table td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+.board-table tr:last-child td { border-bottom: none; }
+.board-table tr:nth-child(even) td { background: var(--row-alt); }
+.board-icon {
+  width: 44px; text-align: center; font-size: 1.35rem; color: var(--accent);
+}
+.board-name { font-size: 0.95rem; font-weight: 700; }
+.board-name a { color: var(--link); }
+.board-desc { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+.board-stats { text-align: center; white-space: nowrap; color: var(--muted); font-size: 0.8rem; }
+.board-stats strong { display: block; color: var(--text); font-size: 0.95rem; }
+.board-last { font-size: 0.8rem; color: var(--muted); max-width: 220px; }
+.board-last a { font-weight: 600; }
+
+/* Topic list */
+.topic-bar {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.topic-table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; box-shadow: var(--shadow); }
+.topic-table th {
+  background: linear-gradient(180deg, #3a5a7a, var(--cat-bg)); color: #fff;
+  padding: 8px 10px; text-align: left; font-size: 0.8rem;
+}
+.topic-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.topic-table tr:nth-child(even) td { background: var(--row-alt); }
+.topic-subject { font-weight: 700; font-size: 0.92rem; }
+.topic-subject .locked { color: #888; margin-right: 4px; }
+.topic-subject .sticky { color: var(--gold); margin-right: 4px; }
+.topic-starter { font-size: 0.78rem; color: var(--muted); }
+.num { text-align: center; width: 70px; color: var(--muted); }
+.lastpost { font-size: 0.78rem; color: var(--muted); width: 180px; }
+
+/* Thread */
+.post {
+  border: 1px solid var(--border); margin-bottom: 10px; background: var(--card);
+  border-radius: 3px; overflow: hidden; box-shadow: var(--shadow);
+  display: grid; grid-template-columns: 160px 1fr;
+}
+@media (max-width: 700px) {
+  .post { grid-template-columns: 1fr; }
+  .poster { border-right: none !important; border-bottom: 1px solid var(--border); }
+}
+.poster {
+  background: var(--row-alt); border-right: 1px solid var(--border);
+  padding: 12px; text-align: center;
+}
+.poster .name { font-weight: 700; color: var(--link); font-size: 0.95rem; }
+.poster .rank { font-size: 0.75rem; color: var(--muted); margin: 4px 0; }
+.poster .av {
+  width: 80px; height: 80px; border-radius: 4px; object-fit: cover;
+  border: 1px solid var(--border); margin: 8px auto; display: block; background: #ccc;
+}
+.post-body { padding: 12px 14px; }
+.post-head {
+  display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted);
+  border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px;
+}
+.post-content { font-size: 0.92rem; line-height: 1.55; word-wrap: break-word; }
+.post-content img { max-width: 100%; border-radius: 4px; margin: 6px 0; }
+.post-content blockquote {
+  border-left: 3px solid var(--accent); background: var(--row-alt);
+  padding: 8px 12px; margin: 8px 0; color: var(--muted); font-size: 0.88rem;
+}
+.post-content pre {
+  background: #1e2430; color: #e2e8f0; padding: 10px; border-radius: 4px;
+  overflow-x: auto; font-size: 0.82rem;
+}
+.post-content b, .post-content strong { font-weight: 700; }
+.post-foot { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border); }
+
+/* Editor */
+.editor {
+  background: var(--card); border: 1px solid var(--border); border-radius: 3px;
+  padding: 14px; margin-top: 14px; box-shadow: var(--shadow);
+}
+.editor h3 { margin-bottom: 10px; font-size: 0.95rem; }
+.bb-toolbar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.bb-toolbar button {
+  padding: 4px 8px; font-size: 0.78rem; border: 1px solid var(--border);
+  background: var(--bg2); cursor: pointer; border-radius: 2px; font-family: inherit;
+}
+.editor input, .editor textarea {
+  width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 3px;
+  font-family: inherit; font-size: 0.9rem; margin-bottom: 8px;
+}
+.editor textarea { min-height: 140px; resize: vertical; }
+
+.footer {
+  max-width: 1100px; margin: 20px auto; padding: 12px; text-align: center;
+  color: var(--muted); font-size: 0.78rem; border-top: 1px solid var(--border);
+}
+.stats-box {
+  background: var(--card); border: 1px solid var(--border); border-radius: 3px;
+  padding: 10px 14px; margin-top: 14px; font-size: 0.82rem; color: var(--muted);
+  box-shadow: var(--shadow);
+}
+.hidden { display: none !important; }
+.empty { padding: 24px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div id="authView">
+  <div class="topbar"><div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><i class="fa-solid fa-shield-halved"></i></div>
+      <h1>LSPD Forum <span>Simple Machines style · Mercia RP</span></h1>
+    </div>
+  </div></div>
+  <div class="login-panel">
+    <h2 id="authTitle">Giriş Yap</h2>
+    <label>IC İsim</label>
+    <input id="authName" placeholder="Ad Soyad" autocomplete="username">
+    <label>Şifre</label>
+    <input id="authPass" type="password" placeholder="Şifre" autocomplete="current-password">
+    <div class="err" id="authErr"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="authBtn" onclick="doAuth()">Giriş Yap</button>
+      <button class="btn" onclick="toggleMode()">Kayıt ol</button>
+    </div>
+    <p style="margin-top:14px;font-size:0.8rem;color:var(--muted);">MDC ile aynı isim/şifre. Onaysız hesap giremez.</p>
+  </div>
+</div>
+
+<div id="appView" class="hidden">
+  <div class="topbar"><div class="topbar-inner">
+    <div class="brand">
+      <div class="logo"><i class="fa-solid fa-shield-halved"></i></div>
+      <h1>LSPD Forum <span>Los Santos Police Department</span></h1>
+    </div>
+    <div class="userbox">
+      Hoş geldin, <span class="uname" id="topUser">—</span>
+      <a href="#" onclick="goHome();return false;">Ana Sayfa</a>
+      <a href="../index.html" target="_blank">MDC</a>
+      <a href="#" onclick="logout();return false;">Çıkış</a>
+    </div>
+  </div></div>
+  <div class="navstrip"><div class="navstrip-inner">
+    <a href="#" onclick="goHome();return false;"><i class="fa-solid fa-house"></i> Ana Sayfa</a>
+    <a href="#" onclick="goHome();return false;">Forum</a>
+    <a href="../index.html" target="_blank">MDC Sistemi</a>
+    <a href="../politika.html" target="_blank">Politikalar</a>
+  </div></div>
+
+  <div class="wrap">
+    <div class="navigate" id="breadcrumb">LSPD Forum</div>
+    <div id="main"></div>
+    <div class="stats-box" id="statsBox">Yükleniyor…</div>
+  </div>
+  <div class="footer">
+    SMF 2.0 tarzı arayüz · Firebase · LSPD Mercia RP<br>
+    Powered by community forum layout inspired by Simple Machines Forum
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDdp_kKYK0wGDUGUgkO96-vGZs5F2Ot250",
+  authDomain: "mercia-pd.firebaseapp.com",
+  projectId: "mercia-pd",
+  storageBucket: "mercia-pd.firebasestorage.app",
+  messagingSenderId: "340875265258",
+  appId: "1:340875265258:web:8ebbff9c4275888ee9c393"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let user = null, userId = null, isSignUp = false;
+let view = { page: 'home' };
+
+const DEFAULT_CATS = [
+  {
+    id: 'komuta', title: 'Komuta & Bilgilendirme',
+    boards: [
+      { id: 'duyuru', name: 'Duyurular', desc: 'Resmi komuta duyuruları ve emirler.', icon: 'fa-bullhorn' },
+      { id: 'kurallar', name: 'Kurallar & SOP', desc: 'Departman kuralları ve prosedür tartışması.', icon: 'fa-gavel' }
+    ]
+  },
+  {
+    id: 'saha', title: 'Saha & Operasyon',
+    boards: [
+      { id: 'genel', name: 'Genel Tartışma', desc: 'Memurlar arası genel konular.', icon: 'fa-comments' },
+      { id: 'trafik', name: 'Trafik Birimi', desc: 'Trafik, çevirme, kaza paylaşımları.', icon: 'fa-car' },
+      { id: 'olay', name: 'Olay Anlatımları', desc: 'Saha hikâyeleri ve debrief.', icon: 'fa-book-open' }
+    ]
+  },
+  {
+    id: 'buro', title: 'Büro',
+    boards: [
+      { id: 'dedektif', name: 'Dedektif Büro', desc: 'Soruşturma notları ve dosya tartışması.', icon: 'fa-user-secret' },
+      { id: 'gnd', name: 'GND', desc: 'Çete ve narkotik birimi.', icon: 'fa-user-ninja' },
+      { id: 'iad', name: 'IAD', desc: 'İç işler — yetkili personel.', icon: 'fa-scale-balanced' }
+    ]
+  },
+  {
+    id: 'egitim', title: 'Eğitim & Personel',
+    boards: [
+      { id: 'ftp', name: 'FTO / FTP', desc: 'Saha eğitim programı tartışmaları.', icon: 'fa-graduation-cap' },
+      { id: 'basvuru', name: 'Başvuru & Akademi', desc: 'Alım ve akademi soruları.', icon: 'fa-clipboard-list' }
+    ]
+  }
+];
+
+function toEmail(name) {
+  return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '@lspd.local';
+}
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function fmt(ts) {
+  try {
+    const d = ts?.toDate ? ts.toDate() : new Date(ts);
+    if (isNaN(d)) return '—';
+    return d.toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
+  } catch (e) { return '—'; }
+}
+function isStaff() {
+  const r = (user?.rank || '').toLowerCase();
+  return user?.isAdmin || /lieutenant|sergeant|supervisor/.test(r);
+}
+
+function bbcode(text) {
+  if (!text) return '';
+  let s = esc(text);
+  // protect code
+  const codes = [];
+  s = s.replace(/\[code\]([\s\S]*?)\[\/code\]/gi, (_, c) => {
+    codes.push(c);
+    return '%%CODE' + (codes.length - 1) + '%%';
+  });
+  s = s.replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<b>$1</b>');
+  s = s.replace(/\[i\]([\s\S]*?)\[\/i\]/gi, '<i>$1</i>');
+  s = s.replace(/\[u\]([\s\S]*?)\[\/u\]/gi, '<u>$1</u>');
+  s = s.replace(/\[s\]([\s\S]*?)\[\/s\]/gi, '<s>$1</s>');
+  s = s.replace(/\[url=(https?:\/\/[^\]]+)\]([\s\S]*?)\[\/url\]/gi, '<a href="$1" target="_blank" rel="noopener">$2</a>');
+  s = s.replace(/\[url\](https?:\/\/[^\[]+)\[\/url\]/gi, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  s = s.replace(/\[img\](https?:\/\/[^\[]+)\[\/img\]/gi, '<img src="$1" alt="">');
+  s = s.replace(/\[quote\]([\s\S]*?)\[\/quote\]/gi, '<blockquote>$1</blockquote>');
+  s = s.replace(/\[quote=([^\]]+)\]([\s\S]*?)\[\/quote\]/gi, '<blockquote><strong>$1:</strong><br>$2</blockquote>');
+  s = s.replace(/\n/g, '<br>');
+  s = s.replace(/%%CODE(\d+)%%/g, (_, i) => '<pre>' + codes[+i] + '</pre>');
+  return s;
+}
+
+function toggleMode() {
+  isSignUp = !isSignUp;
+  document.getElementById('authTitle').textContent = isSignUp ? 'Kayıt Başvurusu' : 'Giriş Yap';
+  document.getElementById('authBtn').textContent = isSignUp ? 'Başvuru Yap' : 'Giriş Yap';
+}
+function doAuth() {
+  const name = document.getElementById('authName').value.trim();
+  const pass = document.getElementById('authPass').value;
+  const err = document.getElementById('authErr');
+  err.style.display = 'none';
+  if (!name || !pass) { err.textContent = 'İsim ve şifre gerekli.'; err.style.display = 'block'; return; }
+  const email = toEmail(name);
+  if (isSignUp) {
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then(cred => db.collection('users').doc(cred.user.uid).set({
+        name, icName: name, status: 'pending', rank: 'Police Officer I', badge: '000',
+        avatar: 'lspd.png', division: 'Patrol Division'
+      }))
+      .then(() => { alert('Başvuru alındı. MDC amiri onaylamalı.'); auth.signOut(); })
+      .catch(e => { err.textContent = e.message; err.style.display = 'block'; });
+  } else {
+    auth.signInWithEmailAndPassword(email, pass)
+      .catch(e => { err.textContent = 'Giriş hatalı.'; err.style.display = 'block'; });
+  }
+}
+function logout() { auth.signOut(); }
+
+auth.onAuthStateChanged(async u => {
+  if (!u) {
+    document.getElementById('authView').classList.remove('hidden');
+    document.getElementById('appView').classList.add('hidden');
+    user = null; userId = null;
+    return;
+  }
+  userId = u.uid;
+  const snap = await db.collection('users').doc(u.uid).get();
+  if (!snap.exists || snap.data().status !== 'approved') {
+    alert(snap.exists && snap.data().status === 'pending' ? 'Hesap onay bekliyor.' : 'Hesap bulunamadı / onaylı değil.');
+    auth.signOut();
+    return;
+  }
+  user = snap.data();
+  document.getElementById('authView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('topUser').textContent = user.name + ' (' + (user.rank || '') + ')';
+  await ensureBoards();
+  goHome();
+  loadStats();
+});
+
+async function ensureBoards() {
+  const meta = await db.collection('smfMeta').doc('boards').get();
+  if (!meta.exists) {
+    await db.collection('smfMeta').doc('boards').set({ categories: DEFAULT_CATS, updatedAt: Date.now() });
+  }
+}
+
+async function getCategories() {
+  const meta = await db.collection('smfMeta').doc('boards').get();
+  return (meta.exists && meta.data().categories) ? meta.data().categories : DEFAULT_CATS;
+}
+
+function setCrumb(html) {
+  document.getElementById('breadcrumb').innerHTML = html;
+}
+
+function goHome() {
+  view = { page: 'home' };
+  setCrumb('<a href="#" onclick="goHome();return false;">LSPD Forum</a>');
+  renderHome();
+}
+
+async function renderHome() {
+  const main = document.getElementById('main');
+  main.innerHTML = '<p class="empty">Forum yükleniyor…</p>';
+  const cats = await getCategories();
+  // counts
+  const topicSnap = await db.collection('smfTopics').get().catch(() => null);
+  const counts = {}; // boardId -> { topics, posts, last }
+  if (topicSnap) {
+    topicSnap.forEach(d => {
+      const t = d.data();
+      const b = t.boardId;
+      if (!counts[b]) counts[b] = { topics: 0, posts: 0, last: null, lastTitle: '', lastBy: '' };
+      counts[b].topics++;
+      counts[b].posts += (t.replies || 0) + 1;
+      const sec = t.lastPostAt?.seconds || t.createdAt?.seconds || 0;
+      if (!counts[b].last || sec > counts[b].last) {
+        counts[b].last = sec;
+        counts[b].lastTitle = t.title;
+        counts[b].lastBy = t.lastPostBy || t.authorName;
+        counts[b].lastId = d.id;
+        counts[b].lastAt = t.lastPostAt || t.createdAt;
+      }
+    });
+  }
+
+  let html = '';
+  cats.forEach(cat => {
+    html += `<div class="cat"><div class="cat-header">${esc(cat.title)}</div>
+      <table class="board-table">
+        <tr><th style="width:50px"></th><th>Forum</th><th style="width:80px">Konular</th><th style="width:80px">Mesajlar</th><th style="width:200px">Son Mesaj</th></tr>`;
+    (cat.boards || []).forEach(b => {
+      const c = counts[b.id] || { topics: 0, posts: 0 };
+      html += `<tr>
+        <td class="board-icon"><i class="fa-solid ${esc(b.icon || 'fa-comments')}"></i></td>
+        <td>
+          <div class="board-name"><a href="#" onclick="openBoard('${b.id}','${esc(b.name).replace(/'/g,"\\'")}');return false;">${esc(b.name)}</a></div>
+          <div class="board-desc">${esc(b.desc || '')}</div>
+        </td>
+        <td class="board-stats"><strong>${c.topics}</strong>konu</td>
+        <td class="board-stats"><strong>${c.posts}</strong>mesaj</td>
+        <td class="board-last">${c.lastTitle
+          ? `<a href="#" onclick="openTopic('${c.lastId}');return false;">${esc(c.lastTitle).slice(0,40)}</a><br>by ${esc(c.lastBy || '')}<br>${fmt(c.lastAt)}`
+          : '— yok —'}</td>
+      </tr>`;
+    });
+    html += `</table></div>`;
+  });
+  main.innerHTML = html;
+}
+
+async function openBoard(boardId, boardName) {
+  view = { page: 'board', boardId, boardName };
+  setCrumb(`<a href="#" onclick="goHome();return false;">LSPD Forum</a> » <strong>${esc(boardName)}</strong>`);
+  const main = document.getElementById('main');
+  main.innerHTML = '<p class="empty">Konular yükleniyor…</p>';
+
+  let topics = [];
+  try {
+    const snap = await db.collection('smfTopics').where('boardId', '==', boardId).get();
+    snap.forEach(d => topics.push({ id: d.id, ...d.data() }));
+  } catch (e) {
+    const snap = await db.collection('smfTopics').get();
+    snap.forEach(d => {
+      const x = d.data();
+      if (x.boardId === boardId) topics.push({ id: d.id, ...x });
+    });
+  }
+  topics.sort((a, b) => {
+    if (a.sticky && !b.sticky) return -1;
+    if (!a.sticky && b.sticky) return 1;
+    const sa = a.lastPostAt?.seconds || a.createdAt?.seconds || 0;
+    const sb = b.lastPostAt?.seconds || b.createdAt?.seconds || 0;
+    return sb - sa;
+  });
+
+  let html = `<div class="topic-bar">
+    <strong>${esc(boardName)}</strong>
+    <button class="btn btn-primary btn-sm" onclick="showNewTopic()"><i class="fa-solid fa-plus"></i> Yeni Konu</button>
+  </div>
+  <div id="newTopicBox" class="editor hidden">
+    <h3>Yeni konu</h3>
+    <div class="bb-toolbar">
+      <button type="button" onclick="wrapBB('ntBody','b')"><b>B</b></button>
+      <button type="button" onclick="wrapBB('ntBody','i')"><i>I</i></button>
+      <button type="button" onclick="wrapBB('ntBody','u')">U</button>
+      <button type="button" onclick="insertBB('ntBody','[img][/img]')">Img</button>
+      <button type="button" onclick="insertBB('ntBody','[quote][/quote]')">Quote</button>
+      <button type="button" onclick="insertBB('ntBody','[code][/code]')">Code</button>
+    </div>
+    <input id="ntTitle" placeholder="Konu başlığı">
+    <textarea id="ntBody" placeholder="Mesajınız... BBCode destekli"></textarea>
+    <button class="btn btn-primary" onclick="submitTopic()">Gönder</button>
+    <button class="btn" onclick="document.getElementById('newTopicBox').classList.add('hidden')">İptal</button>
+  </div>`;
+
+  if (!topics.length) {
+    html += '<div class="empty">Bu forumda henüz konu yok. İlk konuyu sen aç.</div>';
+  } else {
+    html += `<table class="topic-table">
+      <tr><th>Konu</th><th class="num">Yanıt</th><th class="num">Görüntülenme</th><th>Son Mesaj</th></tr>`;
+    topics.forEach(t => {
+      html += `<tr>
+        <td>
+          <div class="topic-subject">
+            ${t.sticky ? '<span class="sticky" title="Sabit"><i class="fa-solid fa-thumbtack"></i></span>' : ''}
+            ${t.locked ? '<span class="locked" title="Kilitli"><i class="fa-solid fa-lock"></i></span>' : ''}
+            <a href="#" onclick="openTopic('${t.id}');return false;">${esc(t.title)}</a>
+          </div>
+          <div class="topic-starter">Başlatan: ${esc(t.authorName || '')} · ${fmt(t.createdAt)}</div>
+        </td>
+        <td class="num">${t.replies || 0}</td>
+        <td class="num">${t.views || 0}</td>
+        <td class="lastpost">${esc(t.lastPostBy || t.authorName || '')}<br>${fmt(t.lastPostAt || t.createdAt)}</td>
+      </tr>`;
+    });
+    html += '</table>';
+  }
+  main.innerHTML = html;
+}
+
+function showNewTopic() {
+  document.getElementById('newTopicBox').classList.remove('hidden');
+}
+function wrapBB(id, tag) {
+  const el = document.getElementById(id);
+  const a = el.selectionStart, b = el.selectionEnd;
+  const v = el.value;
+  el.value = v.slice(0, a) + '[' + tag + ']' + v.slice(a, b) + '[/' + tag + ']' + v.slice(b);
+}
+function insertBB(id, text) {
+  const el = document.getElementById(id);
+  const a = el.selectionStart;
+  el.value = el.value.slice(0, a) + text + el.value.slice(a);
+}
+
+async function submitTopic() {
+  const title = document.getElementById('ntTitle').value.trim();
+  const body = document.getElementById('ntBody').value.trim();
+  if (!title || !body) return alert('Başlık ve mesaj gerekli.');
+  const ref = await db.collection('smfTopics').add({
+    boardId: view.boardId,
+    title,
+    authorId: userId,
+    authorName: user.name,
+    authorRank: user.rank || '',
+    authorAvatar: user.avatar || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastPostAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastPostBy: user.name,
+    replies: 0,
+    views: 0,
+    sticky: false,
+    locked: false
+  });
+  await db.collection('smfPosts').add({
+    topicId: ref.id,
+    body,
+    authorId: userId,
+    authorName: user.name,
+    authorRank: user.rank || '',
+    authorAvatar: user.avatar || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    isFirst: true
+  });
+  openTopic(ref.id);
+}
+
+async function openTopic(topicId) {
+  view = { page: 'topic', topicId };
+  const main = document.getElementById('main');
+  main.innerHTML = '<p class="empty">Konu yükleniyor…</p>';
+
+  const tdoc = await db.collection('smfTopics').doc(topicId).get();
+  if (!tdoc.exists) { main.innerHTML = '<p class="empty">Konu bulunamadı.</p>'; return; }
+  const topic = { id: tdoc.id, ...tdoc.data() };
+  db.collection('smfTopics').doc(topicId).update({ views: firebase.firestore.FieldValue.increment(1) }).catch(() => {});
+
+  setCrumb(`<a href="#" onclick="goHome();return false;">LSPD Forum</a> » <a href="#" onclick="openBoard('${topic.boardId}','${esc(topic.boardId)}');return false;">Board</a> » <strong>${esc(topic.title)}</strong>`);
+
+  let posts = [];
+  try {
+    const snap = await db.collection('smfPosts').where('topicId', '==', topicId).orderBy('createdAt').get();
+    snap.forEach(d => posts.push({ id: d.id, ...d.data() }));
+  } catch (e) {
+    const snap = await db.collection('smfPosts').where('topicId', '==', topicId).get();
+    snap.forEach(d => posts.push({ id: d.id, ...d.data() }));
+    posts.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+  }
+
+  let html = `<div class="topic-bar">
+    <h2 style="font-size:1.1rem;">${esc(topic.title)}</h2>
+    <div>
+      ${isStaff() && !topic.sticky ? `<button class="btn btn-sm" onclick="modTopic('${topicId}','sticky')">Sabitle</button>` : ''}
+      ${isStaff() && !topic.locked ? `<button class="btn btn-sm" onclick="modTopic('${topicId}','lock')">Kilitle</button>` : ''}
+      ${isStaff() && topic.locked ? `<button class="btn btn-sm" onclick="modTopic('${topicId}','unlock')">Kilidi aç</button>` : ''}
+    </div>
+  </div>`;
+
+  posts.forEach((p, i) => {
+    html += `<div class="post">
+      <div class="poster">
+        <div class="name">${esc(p.authorName)}</div>
+        <div class="rank">${esc(p.authorRank || '')}</div>
+        <img class="av" src="${esc(p.authorAvatar || 'lspd.png')}" onerror="this.src='https://i.imgur.com/6VBx3io.png'" alt="">
+      </div>
+      <div class="post-body">
+        <div class="post-head">
+          <span>Yanıt #${i + 1}</span>
+          <span>${fmt(p.createdAt)}</span>
+        </div>
+        <div class="post-content">${bbcode(p.body)}</div>
+        <div class="post-foot">
+          <button class="btn btn-sm" onclick="quotePost('${esc(p.authorName).replace(/'/g,"\\'")}','${p.id}')">Alıntı</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  if (topic.locked) {
+    html += '<div class="empty">Bu konu kilitli — yeni yanıt yazılamaz.</div>';
+  } else {
+    html += `<div class="editor" id="replyBox">
+      <h3>Yanıt yaz</h3>
+      <div class="bb-toolbar">
+        <button type="button" onclick="wrapBB('replyBody','b')"><b>B</b></button>
+        <button type="button" onclick="wrapBB('replyBody','i')"><i>I</i></button>
+        <button type="button" onclick="wrapBB('replyBody','u')">U</button>
+        <button type="button" onclick="insertBB('replyBody','[img][/img]')">Img</button>
+        <button type="button" onclick="insertBB('replyBody','[quote][/quote]')">Quote</button>
+      </div>
+      <textarea id="replyBody" placeholder="Yanıtınız... [b] [i] [img] [quote]"></textarea>
+      <button class="btn btn-primary" onclick="submitReply()">Gönder</button>
+    </div>`;
+  }
+  main.innerHTML = html;
+  // fix board name in crumb
+  getCategories().then(cats => {
+    for (const c of cats) {
+      for (const b of c.boards || []) {
+        if (b.id === topic.boardId) {
+          setCrumb(`<a href="#" onclick="goHome();return false;">LSPD Forum</a> » <a href="#" onclick="openBoard('${b.id}','${esc(b.name).replace(/'/g,"\\'")}');return false;">${esc(b.name)}</a> » <strong>${esc(topic.title)}</strong>`);
+        }
+      }
+    }
+  });
+}
+
+window.__quoteCache = {};
+async function quotePost(name, postId) {
+  const snap = await db.collection('smfPosts').doc(postId).get();
+  const body = snap.exists ? snap.data().body : '';
+  const el = document.getElementById('replyBody');
+  if (!el) return;
+  el.value += `[quote=${name}]\n${body}\n[/quote]\n`;
+  el.focus();
+}
+
+async function submitReply() {
+  const body = document.getElementById('replyBody')?.value.trim();
+  if (!body) return alert('Mesaj boş olamaz.');
+  const topicId = view.topicId;
+  await db.collection('smfPosts').add({
+    topicId,
+    body,
+    authorId: userId,
+    authorName: user.name,
+    authorRank: user.rank || '',
+    authorAvatar: user.avatar || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    isFirst: false
+  });
+  await db.collection('smfTopics').doc(topicId).update({
+    replies: firebase.firestore.FieldValue.increment(1),
+    lastPostAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastPostBy: user.name
+  });
+  openTopic(topicId);
+}
+
+async function modTopic(id, action) {
+  if (!isStaff()) return;
+  if (action === 'sticky') await db.collection('smfTopics').doc(id).update({ sticky: true });
+  if (action === 'lock') await db.collection('smfTopics').doc(id).update({ locked: true });
+  if (action === 'unlock') await db.collection('smfTopics').doc(id).update({ locked: false });
+  openTopic(id);
+}
+
+async function loadStats() {
+  const box = document.getElementById('statsBox');
+  try {
+    const [topics, posts, users] = await Promise.all([
+      db.collection('smfTopics').get(),
+      db.collection('smfPosts').get(),
+      db.collection('users').where('status', '==', 'approved').get()
+    ]);
+    box.innerHTML = `<strong>Forum istatistikleri:</strong>
+      ${topics.size} konu · ${posts.size} mesaj · ${users.size} üye
+      &nbsp;|&nbsp; <a href="../index.html" target="_blank">MDC’ye git</a>`;
+  } catch (e) {
+    box.textContent = 'İstatistik yüklenemedi.';
+  }
+}
+</script>
+</body>
+</html>
